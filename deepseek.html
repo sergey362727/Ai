@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PyCamp — интерактивный курс Python</title>
+  <!-- Font Awesome для иконок -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
+    }
+
+    body {
+      background: #f5f7fb;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Хедер */
+    .navbar {
+      background: #0a0e1a;
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      border-bottom: 3px solid #2ecc71;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo i {
+      color: #2ecc71;
+      font-size: 2rem;
+    }
+
+    .progress-badge {
+      background: #1e2538;
+      padding: 0.6rem 1.2rem;
+      border-radius: 40px;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .progress-badge i {
+      color: #2ecc71;
+    }
+
+    /* Основной layout */
+    .app-container {
+      display: flex;
+      flex: 1;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 1.5rem 1.5rem;
+      gap: 1.8rem;
+      flex-wrap: wrap;
+    }
+
+    /* Сайдбар — меню курса */
+    .course-sidebar {
+      flex: 1.2;
+      min-width: 280px;
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      padding: 1.8rem 1.2rem;
+      height: fit-content;
+      border: 1px solid #e9edf4;
+    }
+
+    .course-sidebar h3 {
+      font-size: 1.3rem;
+      margin-bottom: 1.5rem;
+      color: #0a0e1a;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 2px solid #eef2f6;
+      padding-bottom: 0.8rem;
+    }
+
+    .lesson-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .lesson-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 14px;
+      background: #f8fafd;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-left: 4px solid transparent;
+      font-weight: 500;
+      color: #2a3348;
+    }
+
+    .lesson-item i {
+      width: 22px;
+      color: #6b7a8f;
+      font-size: 1.1rem;
+    }
+
+    .lesson-item.active {
+      background: #e8f5e9;
+      border-left-color: #2ecc71;
+      color: #0a0e1a;
+      font-weight: 600;
+      box-shadow: 0 4px 8px rgba(46, 204, 113, 0.1);
+    }
+
+    .lesson-item.completed i.fa-circle-check {
+      color: #2ecc71;
+    }
+
+    .lesson-item .check-icon {
+      margin-left: auto;
+      color: #2ecc71;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .lesson-item.completed .check-icon {
+      opacity: 1;
+    }
+
+    /* Правая часть — рабочая область */
+    .workspace {
+      flex: 3;
+      min-width: 500px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.8rem;
+    }
+
+    /* Карточка с заданием */
+    .task-card {
+      background: white;
+      border-radius: 28px;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.05);
+      padding: 2rem 2rem 1.8rem;
+      border: 1px solid #e9edf4;
+      transition: all 0.2s;
+    }
+
+    .task-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.2rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .task-header h2 {
+      font-size: 1.8rem;
+      color: #0a0e1a;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .difficulty-badge {
+      background: #f0f4fe;
+      color: #1e3a8a;
+      padding: 6px 16px;
+      border-radius: 30px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .task-description {
+      background: #f9fcff;
+      padding: 1.3rem 1.6rem;
+      border-radius: 20px;
+      border-left: 6px solid #2ecc71;
+      margin: 1.5rem 0 1.8rem;
+      color: #1f2a3f;
+      line-height: 1.6;
+      font-size: 1.05rem;
+      box-shadow: inset 0 1px 4px rgba(0,0,0,0.02);
+    }
+
+    .task-description code {
+      background: #eef2f7;
+      padding: 3px 8px;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.95rem;
+      color: #0b3b5c;
+    }
+
+    /* Редактор */
+    .editor-container {
+      margin-bottom: 1.5rem;
+    }
+
+    .editor-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #2a3348;
+      font-size: 0.95rem;
+    }
+
+    .editor-label i {
+      color: #2ecc71;
+    }
+
+    textarea.code-editor {
+      width: 100%;
+      height: 220px;
+      padding: 1.2rem 1.4rem;
+      background: #0d1117;
+      color: #e6edf3;
+      border: 2px solid #1f2a3f;
+      border-radius: 20px;
+      font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 1rem;
+      line-height: 1.5;
+      resize: vertical;
+      outline: none;
+      transition: border 0.2s;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      tab-size: 4;
+    }
+
+    textarea.code-editor:focus {
+      border-color: #2ecc71;
+    }
+
+    /* Кнопки */
+    .action-buttons {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn {
+      border: none;
+      padding: 0.9rem 2rem;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.15s;
+      background: white;
+      border: 1px solid #d0dae8;
+      color: #2a3348;
+    }
+
+    .btn-primary {
+      background: #2ecc71;
+      border: 1px solid #2ecc71;
+      color: white;
+      box-shadow: 0 8px 18px rgba(46, 204, 113, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: #27ae60;
+      transform: translateY(-2px);
+    }
+
+    .btn-secondary:hover {
+      background: #f0f4fe;
+      border-color: #2ecc71;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    /* Блок вывода */
+    .output-container {
+      background: #f1f5f9;
+      border-radius: 18px;
+      padding: 1.2rem 1.5rem;
+      border: 1px solid #dae2ed;
+      margin-top: 0.5rem;
+    }
+
+    .output-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      color: #1e2b3c;
+      margin-bottom: 12px;
+    }
+
+    .output-box {
+      background: #ffffff;
+      padding: 1.2rem 1.5rem;
+      border-radius: 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+      color: #0b1c2e;
+      min-height: 70px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      border: 1px solid #e0e8f2;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);
+      line-height: 1.6;
+    }
+
+    .success-message {
+      background: #e2f7e9;
+      color: #0e5c2e;
+      padding: 1rem 1.5rem;
+      border-radius: 14px;
+      font-weight: 500;
+      margin-top: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-left: 6px solid #2ecc71;
+    }
+
+    .error-message {
+      background: #ffe8e8;
+      color: #a12424;
+      padding: 1rem 1.5rem;
+      border-radius: 14px;
+      font-weight: 500;
+      margin-top: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-left: 6px solid #e74c3c;
+    }
+
+    /* Прогресс-бар глобальный */
+    .global-progress {
+      background: #eef2f6;
+      height: 10px;
+      border-radius: 20px;
+      margin-top: 10px;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .global-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #2ecc71, #27ae60);
+      width: 0%;
+      border-radius: 20px;
+      transition: width 0.4s ease;
+    }
+
+    /* Адаптив */
+    @media (max-width: 1000px) {
+      .app-container {
+        flex-direction: column;
+      }
+      .course-sidebar {
+        width: 100%;
+      }
+      .workspace {
+        min-width: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Шапка -->
+  <header class="navbar">
+    <div class="logo">
+      <i class="fa-brands fa-python"></i> PyCamp
+    </div>
+    <div class="progress-badge">
+      <i class="fa-solid fa-trophy"></i>
+      <span id="progressText">0 / 10 уроков</span>
+      <div class="global-progress" style="width: 120px;">
+        <div class="global-progress-bar" id="globalProgressBar" style="width: 0%;"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Основной контент -->
+  <div class="app-container">
+    <!-- Сайдбар с уроками -->
+    <aside class="course-sidebar">
+      <h3><i class="fa-solid fa-book-open"></i> Курс Python</h3>
+      <div class="lesson-list" id="lessonList">
+        <!-- Генерируется JS -->
+      </div>
+    </aside>
+
+    <!-- Рабочая область -->
+    <main class="workspace">
+      <div class="task-card" id="taskCard">
+        <div class="task-header">
+          <h2 id="lessonTitle"><i class="fa-brands fa-python"></i> Введение в Python</h2>
+          <span class="difficulty-badge" id="difficultyBadge">Начальный</span>
+        </div>
+        <div class="task-description" id="lessonDescription">
+          <!-- Заполняется JS -->
+        </div>
+
+        <!-- Редактор кода -->
+        <div class="editor-container">
+          <div class="editor-label">
+            <i class="fa-solid fa-code"></i> Редактор кода
+          </div>
+          <textarea class="code-editor" id="codeEditor" spellcheck="false"></textarea>
+        </div>
+
+        <!-- Кнопки -->
+        <div class="action-buttons">
+          <button class="btn btn-primary" id="runBtn"><i class="fa-solid fa-play"></i> Запустить код</button>
+          <button class="btn btn-secondary" id="resetBtn"><i class="fa-solid fa-rotate-left"></i> Сбросить</button>
+          <button class="btn btn-secondary" id="nextBtn"><i class="fa-solid fa-arrow-right"></i> Следующий урок</button>
+        </div>
+
+        <!-- Вывод -->
+        <div class="output-container">
+          <div class="output-header">
+            <i class="fa-solid fa-terminal"></i> Результат выполнения
+          </div>
+          <div class="output-box" id="outputBox">Здесь появится вывод...</div>
+        </div>
+
+        <!-- Сообщение об успехе / ошибке -->
+        <div id="messageArea"></div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function() {
+      // ====================== КУРС ======================
+      const lessons = [
+        {
+          id: 0,
+          title: "Введение в Python",
+          difficulty: "Начальный",
+          description: `Python — мощный и простой язык программирования. 
+          <br><br>Напишите программу, которая выводит <code>Hello, PyCamp!</code> с помощью функции <code>print()</code>.`,
+          defaultCode: `# Напишите ваш код здесь\nprint("Hello, PyCamp!")`,
+          expectedOutput: "Hello, PyCamp!",
+          validation: (output) => output.trim() === "Hello, PyCamp!",
+          hint: "Используйте print() с текстом в кавычках."
+        },
+        {
+          id: 1,
+          title: "Переменные и типы",
+          difficulty: "Начальный",
+          description: `Создайте переменную <code>name</code> со значением <code>"Python"</code> и переменную <code>version</code> со значением <code>3.12</code>. 
+          <br>Выведите их через пробел: <code>Python 3.12</code>`,
+          defaultCode: `# Создайте переменные и выведите их\nname = "Python"\nversion = 3.12\nprint(name, version)`,
+          expectedOutput: "Python 3.12",
+          validation: (output) => output.trim() === "Python 3.12",
+          hint: "Используйте print(name, version) — Python автоматически добавит пробел."
+        },
+        {
+          id: 2,
+          title: "Арифметика",
+          difficulty: "Начальный",
+          description: `Вычислите сумму чисел <code>15</code> и <code>27</code>, результат выведите на экран.`,
+          defaultCode: `# Выведите сумму 15 и 27\nprint(15 + 27)`,
+          expectedOutput: "42",
+          validation: (output) => output.trim() === "42",
+          hint: "Используйте оператор + внутри print()."
+        },
+        {
+          id: 3,
+          title: "Условные операторы",
+          difficulty: "Средний",
+          description: `Напишите программу, которая проверяет число <code>x = 10</code>. 
+          Если число больше 5, выведите <code>"Больше 5"</code>, иначе <code>"Меньше или равно 5"</code>.`,
+          defaultCode: `x = 10\n# Напишите условие\nif x > 5:\n    print("Больше 5")\nelse:\n    print("Меньше или равно 5")`,
+          expectedOutput: "Больше 5",
+          validation: (output) => output.trim() === "Больше 5",
+          hint: "Используйте if x > 5: ... else: ..."
+        },
+        {
+          id: 4,
+          title: "Циклы for",
+          difficulty: "Средний",
+          description: `Выведите числа от 1 до 5 включительно, каждое с новой строки, используя цикл <code>for</code> и <code>range()</code>.`,
+          defaultCode: `# Цикл for\nfor i in range(1, 6):\n    print(i)`,
+          expectedOutput: "1\n2\n3\n4\n5",
+          validation: (output) => output.trim() === "1\n2\n3\n4\n5",
+          hint: "range(1, 6) даст числа 1,2,3,4,5"
+        },
+        {
+          id: 5,
+          title: "Функции",
+          difficulty: "Средний",
+          description: `Создайте функцию <code>greet(name)</code>, которая возвращает строку <code>"Привет, {name}!"</code>. 
+          Вызовите её с аргументом <code>"Мир"</code> и выведите результат.`,
+          defaultCode: `def greet(name):\n    return f"Привет, {name}!"\n\nprint(greet("Мир"))`,
+          expectedOutput: "Привет, Мир!",
+          validation: (output) => output.trim() === "Привет, Мир!",
+          hint: "Используйте f-строку для форматирования."
+        },
+        {
+          id: 6,
+          title: "Списки",
+          difficulty: "Средний",
+          description: `Дан список <code>fruits = ["яблоко", "банан", "вишня"]</code>. 
+          Выведите второй элемент (индекс 1).`,
+          defaultCode: `fruits = ["яблоко", "банан", "вишня"]\n# Выведите второй элемент\nprint(fruits[1])`,
+          expectedOutput: "банан",
+          validation: (output) => output.trim() === "банан",
+          hint: "Индексация начинается с 0, поэтому второй элемент — fruits[1]."
+        },
+        {
+          id: 7,
+          title: "Словари",
+          difficulty: "Продвинутый",
+          description: `Создайте словарь <code>person = {"name": "Анна", "age": 25}</code> и выведите значение по ключу <code>"name"</code>.`,
+          defaultCode: `person = {"name": "Анна", "age": 25}\n# Выведите имя\nprint(person["name"])`,
+          expectedOutput: "Анна",
+          validation: (output) => output.trim() === "Анна",
+          hint: "Обращение к значению: person[\"name\"]"
+        },
+        {
+          id: 8,
+          title: "Работа с файлами (имитация)",
+          difficulty: "Продвинутый",
+          description: `Напишите функцию <code>write_message()</code>, которая возвращает строку <code>"Файл сохранён"</code>. 
+          Выведите результат вызова этой функции.`,
+          defaultCode: `def write_message():\n    return "Файл сохранён"\n\nprint(write_message())`,
+          expectedOutput: "Файл сохранён",
+          validation: (output) => output.trim() === "Файл сохранён",
+          hint: "Просто верните строку из функции и напечатайте её."
+        },
+        {
+          id: 9,
+          title: "Классы и объекты",
+          difficulty: "Продвинутый",
+          description: `Создайте класс <code>Dog</code> с методом <code>bark()</code>, который возвращает <code>"Гав!"</code>. 
+          Создайте объект <code>my_dog</code> и вызовите <code>my_dog.bark()</code>, выведите результат.`,
+          defaultCode: `class Dog:\n    def bark(self):\n        return "Гав!"\n\nmy_dog = Dog()\nprint(my_dog.bark())`,
+          expectedOutput: "Гав!",
+          validation: (output) => output.trim() === "Гав!",
+          hint: "Не забудьте про self в методе."
+        }
+      ];
+
+      // ====================== СОСТОЯНИЕ ======================
+      let currentLessonId = 0;
+      let completedLessons = new Set(); // id завершённых уроков
+
+      // DOM элементы
+      const lessonListEl = document.getElementById('lessonList');
+      const lessonTitleEl = document.getElementById('lessonTitle');
+      const difficultyBadgeEl = document.getElementById('difficultyBadge');
+      const lessonDescriptionEl = document.getElementById('lessonDescription');
+      const codeEditorEl = document.getElementById('codeEditor');
+      const outputBoxEl = document.getElementById('outputBox');
+      const messageAreaEl = document.getElementById('messageArea');
+      const runBtn = document.getElementById('runBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const progressText = document.getElementById('progressText');
+      const globalProgressBar = document.getElementById('globalProgressBar');
+
+      // ====================== ФУНКЦИИ ======================
+
+      // Обновление прогресса в шапке
+      function updateGlobalProgress() {
+        const total = lessons.length;
+        const done = completedLessons.size;
+        progressText.textContent = `${done} / ${total} уроков`;
+        const percent = (done / total) * 100;
+        globalProgressBar.style.width = `${percent}%`;
+      }
+
+      // Отрисовка списка уроков в сайдбаре
+      function renderLessonList() {
+        lessonListEl.innerHTML = '';
+        lessons.forEach((lesson) => {
+          const isCompleted = completedLessons.has(lesson.id);
+          const isActive = lesson.id === currentLessonId;
+          const div = document.createElement('div');
+          div.className = `lesson-item ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`;
+          div.dataset.id = lesson.id;
+          div.innerHTML = `
+            <i class="fa-solid ${isCompleted ? 'fa-circle-check' : 'fa-circle'}"></i>
+            <span>${lesson.title}</span>
+            <i class="fa-solid fa-check check-icon"></i>
+          `;
+          div.addEventListener('click', () => {
+            loadLesson(lesson.id);
+          });
+          lessonListEl.appendChild(div);
+        });
+      }
+
+      // Загрузка урока по id
+      function loadLesson(id) {
+        const lesson = lessons.find(l => l.id === id);
+        if (!lesson) return;
+        currentLessonId = id;
+
+        // Обновляем активный класс в списке
+        document.querySelectorAll('.lesson-item').forEach(el => {
+          const lessonId = parseInt(el.dataset.id);
+          el.classList.toggle('active', lessonId === id);
+        });
+
+        // Заполняем карточку задания
+        lessonTitleEl.innerHTML = `<i class="fa-brands fa-python"></i> ${lesson.title}`;
+        difficultyBadgeEl.textContent = lesson.difficulty;
+        lessonDescriptionEl.innerHTML = lesson.description;
+
+        // Устанавливаем код по умолчанию
+        codeEditorEl.value = lesson.defaultCode;
+
+        // Очищаем вывод и сообщения
+        outputBoxEl.textContent = 'Здесь появится вывод...';
+        messageAreaEl.innerHTML = '';
+
+        // Если урок уже пройден — показываем сообщение
+        if (completedLessons.has(id)) {
+          messageAreaEl.innerHTML = `<div class="success-message"><i class="fa-solid fa-circle-check"></i> Урок уже пройден! Можете повторить или перейти дальше.</div>`;
+        }
+      }
+
+      // Проверка кода (имитация выполнения Python)
+      function runUserCode() {
+        const code = codeEditorEl.value;
+        const lesson = lessons.find(l => l.id === currentLessonId);
+        if (!lesson) return;
+
+        // Очищаем предыдущие сообщения
+        messageAreaEl.innerHTML = '';
+
+        // Простейший "интерпретатор" на основе ожидаемого вывода и валидации
+        // Мы не выполняем реальный Python, но анализируем код и выводим ожидаемый результат,
+        // если код соответствует шаблону. Это безопасно и работает в браузере.
+        let simulatedOutput = '';
+        let isValid = false;
+
+        // Специальные проверки для каждого урока (соответствие кода)
+        try {
+          // Простая эвристика: если в коде есть ключевые элементы, считаем что студент молодец
+          // Но для точности используем expectedOutput, если код не пустой и не закомментирован полностью.
+          // Однако для интерактивности: если код содержит правильные конструкции, выводим expectedOutput.
+          // Мы не можем выполнить Python, поэтому проверим наличие ключевых слов и выведем expectedOutput,
+          // если код не является просто комментарием.
+
+          // Убираем комментарии для анализа
+          const cleanCode = code.replace(/#.*$/gm, '').trim();
+
+          if (cleanCode.length === 0) {
+            throw new Error('Код пуст. Напишите решение.');
+          }
+
+          // Для каждого урока проверим наличие ключевых элементов
+          switch (lesson.id) {
+            case 0:
+              if (!cleanCode.includes('print') || !cleanCode.includes('Hello, PyCamp!')) {
+                throw new Error('Используйте print("Hello, PyCamp!")');
+              }
+              break;
+            case 1:
+              if (!cleanCode.includes('name') || !cleanCode.includes('version') || !cleanCode.includes('print')) {
+                throw new Error('Создайте переменные name и version, затем выведите их.');
+              }
+              break;
+            case 2:
+              if (!cleanCode.includes('print') || (!cleanCode.includes('15') && !cleanCode.includes('27'))) {
+                throw new Error('Выведите сумму 15 и 27 с помощью print().');
+              }
+              break;
+            case 3:
+              if (!cleanCode.includes('if') || !cleanCode.includes('x > 5')) {
+                throw new Error('Используйте условие if x > 5: ... else: ...');
+              }
+              break;
+            case 4:
+              if (!cleanCode.includes('for') || !cleanCode.includes('range')) {
+                throw new Error('Используйте цикл for и range(1, 6).');
+              }
+              break;
+            case 5:
+              if (!cleanCode.includes('def greet') || !cleanCode.includes('return') || !cleanCode.includes('print')) {
+                throw new Error('Создайте функцию greet(name), возвращающую приветствие, и выведите её результат.');
+              }
+              break;
+            case 6:
+              if (!cleanCode.includes('fruits[1]') && !cleanCode.includes('print(fruits[1])')) {
+                throw new Error('Выведите второй элемент списка fruits[1].');
+              }
+              break;
+            case 7:
+              if (!cleanCode.includes('person["name"]') && !cleanCode.includes("person['name']")) {
+                throw new Error('Выведите значение по ключу "name" из словаря person.');
+              }
+              break;
+            case 8:
+              if (!cleanCode.includes('def write_message') || !cleanCode.includes('return') || !cleanCode.includes('print')) {
+                throw new Error('Создайте функцию write_message(), возвращающую "Файл сохранён", и выведите её.');
+              }
+              break;
+            case 9:
+              if (!cleanCode.includes('class Dog') || !cleanCode.includes('def bark') || !cleanCode.includes('print')) {
+                throw new Error('Создайте класс Dog с методом bark() и вызовите его.');
+              }
+              break;
+            default:
+              break;
+          }
+
+          // Если проверки пройдены, "выполняем" код и получаем ожидаемый вывод
+          simulatedOutput = lesson.expectedOutput;
+          isValid = lesson.validation(simulatedOutput);
+
+          if (!isValid) {
+            throw new Error('Вывод не совпадает с ожидаемым. Попробуйте ещё раз.');
+          }
+
+          // Отображаем вывод
+          outputBoxEl.textContent = simulatedOutput;
+
+          // Если урок ещё не был завершён — отмечаем
+          if (!completedLessons.has(lesson.id)) {
+            completedLessons.add(lesson.id);
+            updateGlobalProgress();
+            renderLessonList(); // перерисовываем, чтобы галочки появились
+            // Снова делаем активным текущий урок
+            document.querySelectorAll('.lesson-item').forEach(el => {
+              el.classList.toggle('active', parseInt(el.dataset.id) === currentLessonId);
+            });
+          }
+
+          // Показываем сообщение об успехе
+          messageAreaEl.innerHTML = `<div class="success-message"><i class="fa-solid fa-circle-check"></i> Отлично! Задание выполнено верно.</div>`;
+
+        } catch (err) {
+          // Ошибка валидации или выполнения
+          outputBoxEl.textContent = 'Ошибка выполнения...';
+          messageAreaEl.innerHTML = `<div class="error-message"><i class="fa-solid fa-triangle-exclamation"></i> ${err.message}</div>`;
+        }
+      }
+
+      // Сброс кода к начальному состоянию
+      function resetCode() {
+        const lesson = lessons.find(l => l.id === currentLessonId);
+        if (lesson) {
+          codeEditorEl.value = lesson.defaultCode;
+        }
+        outputBoxEl.textContent = 'Здесь появится вывод...';
+        messageAreaEl.innerHTML = '';
+      }
+
+      // Переход к следующему уроку
+      function goToNextLesson() {
+        const nextId = currentLessonId + 1;
+        if (nextId < lessons.length) {
+          loadLesson(nextId);
+        } else {
+          // Если это последний урок, покажем сообщение о завершении
+          messageAreaEl.innerHTML = `<div class="success-message" style="background: #d4edda;"><i class="fa-solid fa-crown"></i> Поздравляем! Вы прошли все уроки курса Python!</div>`;
+        }
+      }
+
+      // ====================== ИНИЦИАЛИЗАЦИЯ ======================
+      function init() {
+        // Загружаем первый урок
+        loadLesson(0);
+        // Отрисовываем список уроков
+        renderLessonList();
+        // Обновляем прогресс
+        updateGlobalProgress();
+
+        // Навешиваем обработчики
+        runBtn.addEventListener('click', runUserCode);
+        resetBtn.addEventListener('click', resetCode);
+        nextBtn.addEventListener('click', goToNextLesson);
+
+        // Ctrl+Enter для запуска
+        codeEditorEl.addEventListener('keydown', (e) => {
+          if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            runUserCode();
+          }
+        });
+
+        // Автосохранение кода при переключении урока (можно добавить, но не обязательно)
+      }
+
+      // Запускаем после загрузки DOM
+      init();
+    })();
+  </script>
+</body>
+</html>

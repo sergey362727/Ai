@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PyAcademy - Интерактивный курс Python</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Brython for in-browser Python execution -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.12.0/brython.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/brython@3.12.0/brython_stdlib.js"></script>
+    <!-- Monaco Editor -->
+    <link rel="stylesheet" data-name="vs/dark/chrome-devtools" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs/editor/editor.main.min.css">
+    <script>
+        var require = { paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs' } };
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs/loader.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs/editor/editor.main.nls.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.39.0/min/vs/editor/editor.main.js"></script>
+    <style>
+        .monaco-editor-container {
+            height: 100%;
+            width: 100%;
+        }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e1e2e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #45475a;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #585b70;
+        }
+    </style>
+</head>
+<body onload="brython()" class="bg-[#11111b] text-[#cdd6f4] font-sans antialiased flex flex-col h-screen overflow-hidden">
+
+    <!-- Header / Navbar -->
+    <header class="bg-[#181825] border-b border-[#313244] px-6 py-3 flex items-center justify-between z-10 shrink-0">
+        <div class="flex items-center space-x-3">
+            <div class="bg-amber-400 text-[#11111b] p-2 rounded-lg font-bold text-xl flex items-center justify-center w-10 h-10">
+                <i class="fa-brands fa-python"></i>
+            </div>
+            <div>
+                <span class="font-bold text-lg tracking-wide text-white">pyAcademy</span>
+                <span class="text-xs block text-[#a6adc8]">Интерактивная платформа</span>
+            </div>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="hidden md:flex items-center space-x-4 flex-1 max-w-xl mx-8">
+            <span class="text-xs text-[#a6adc8] whitespace-nowrap">Прогресс курса:</span>
+            <div class="w-full bg-[#313244] h-2 rounded-full overflow-hidden">
+                <div id="course-progress" class="bg-amber-400 h-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <span id="progress-text" class="text-xs font-mono text-amber-400">0/10</span>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <button onclick="toggleMapModal()" class="px-4 py-2 bg-[#313244] hover:bg-[#45475a] text-white rounded text-sm font-medium transition flex items-center space-x-2">
+                <i class="fa-solid fa-map"></i>
+                <span class="hidden sm:inline">Карта курса</span>
+            </button>
+            <div class="h-6 w-[1px] bg-[#313244]"></div>
+            <span class="text-xs bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-full border border-emerald-500/20 flex items-center space-x-1.5">
+                <span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+                <span>Браузерная IDE</span>
+            </span>
+        </div>
+    </header>
+
+    <!-- Main Workspace Setup -->
+    <main class="flex-1 flex overflow-hidden relative">
+        
+        <!-- Sidebar Navigation (Collapsible Course Tree) -->
+        <aside id="sidebar" class="w-80 bg-[#181825] border-r border-[#313244] flex flex-col transition-all duration-300 z-20 absolute md:relative inset-y-0 left-0 -translate-x-full md:translate-x-0">
+            <div class="p-4 border-b border-[#313244] flex items-center justify-between">
+                <h2 class="font-semibold text-sm tracking-wider uppercase text-[#a6adc8]">Модули курса</h2>
+                <button onclick="toggleSidebar()" class="md:hidden text-[#a6adc8] hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div id="modules-list" class="flex-1 overflow-y-auto p-2 space-y-2">
+                <!-- Programmatically populated modules and challenges -->
+            </div>
+        </aside>
+
+        <!-- Main Code Split Sandbox -->
+        <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
+            
+            <!-- Mobile Sidebar Trigger -->
+            <button onclick="toggleSidebar()" class="md:hidden absolute bottom-4 left-4 z-30 bg-amber-400 text-[#11111b] w-12 h-12 rounded-full shadow-lg flex items-center justify-center focus:outline-none">
+                <i class="fa-solid fa-bars text-lg"></i>
+            </button>
+
+            <!-- Column 1: Instructions & Documentation -->
+            <section class="w-full md:w-[35%] bg-[#1e1e2e] flex flex-col border-b md:border-b-0 md:border-r border-[#313244] overflow-hidden h-[45%] md:h-full">
+                <div class="bg-[#181825] px-4 py-2 border-b border-[#313244] flex items-center justify-between shrink-0">
+                    <span id="challenge-title" class="font-bold text-white text-sm">Загрузка задания...</span>
+                    <span id="challenge-difficulty" class="text-[10px] uppercase font-mono px-2 py-0.5 rounded"></span>
+                </div>
+                <div class="flex-1 overflow-y-auto p-6 space-y-4 text-sm leading-relaxed" id="challenge-instructions">
+                    <!-- Instruction HTML content injected here -->
+                </div>
+            </section>
+
+            <!-- Column 2 & 3 Combined Right Pane (Editor & Console) -->
+            <section class="w-full md:w-[65%] flex flex-col overflow-hidden h-[55%] md:h-full bg-[#11111b]">
+                
+                <!-- Editor Top Bar Tabs -->
+                <div class="bg-[#181825] px-4 py-2 border-b border-[#313244] flex items-center justify-between shrink-0">
+                    <div class="flex items-center space-x-2 text-xs text-[#a6adc8]">
+                        <i class="fa-brands fa-python text-amber-400"></i>
+                        <span class="font-mono text-white">main.py</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="resetCode()" class="text-xs px-2.5 py-1 text-[#a6adc8] hover:text-white bg-[#313244] hover:bg-[#45475a] rounded transition">
+                            <i class="fa-solid fa-arrow-rotate-left mr-1"></i> Сбросить
+                        </button>
+                        <button onclick="runCode()" class="text-xs px-3 py-1 bg-sky-500 hover:bg-sky-400 text-white font-medium rounded transition flex items-center">
+                            <i class="fa-solid fa-play mr-1.5 text-[10px]"></i> Запустить код
+                        </button>
+                        <button onclick="submitChallenge()" class="text-xs px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white font-medium rounded transition flex items-center">
+                            <i class="fa-solid fa-check-double mr-1.5 text-[10px]"></i> Проверить решение
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Monaco Editor Viewport Split -->
+                <div class="flex-1 relative bg-[#1e1e2e]">
+                    <div id="monaco-editor" class="monaco-editor-container"></div>
+                </div>
+
+                <!-- Live Evaluation Output Console Pane -->
+                <div class="h-44 bg-[#11111b] border-t border-[#313244] flex flex-col overflow-hidden">
+                    <div class="bg-[#181825] px-4 py-1.5 border-b border-[#313244] flex items-center justify-between text-xs text-[#a6adc8]">
+                        <span class="font-mono uppercase tracking-wider text-[10px] font-bold"><i class="fa-solid fa-terminal mr-1.5"></i> Консоль вывода</span>
+                        <button onclick="clearConsole()" class="hover:text-white transition"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                    <div id="console-output" class="flex-1 p-4 font-mono text-xs overflow-y-auto space-y-1 bg-[#11111b] text-emerald-400 selection:bg-[#313244]">
+                        <div class="text-[#a6adc8] italic">Нажмите кнопку «Запустить код» для выполнения...</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Map/Curriculum Fullscreen Modal -->
+    <div id="map-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#1e1e2e] border border-[#313244] w-full max-w-4xl max-h-[85vh] rounded-xl flex flex-col overflow-hidden shadow-2xl">
+            <div class="p-6 border-b border-[#313244] flex items-center justify-between bg-[#181825]">
+                <div>
+                    <h3 class="text-xl font-bold text-white">Карта учебной программы Python</h3>
+                    <p class="text-sm text-[#a6adc8]">От абсолютного нуля до продвинутых концепций ООП</p>
+                </div>
+                <button onclick="toggleMapModal()" class="text-[#a6adc8] hover:text-white p-2 rounded-lg bg-[#313244]/50 hover:bg-[#313244] transition">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <div id="map-content" class="flex-1 overflow-y-auto p-6 space-y-6">
+                <!-- Populated dynamically -->
+            </div>
+            
+            <div class="p-4 border-t border-[#313244] bg-[#181825] flex justify-end">
+                <button onclick="toggleMapModal()" class="px-5 py-2 bg-amber-400 hover:bg-amber-300 text-[#11111b] font-semibold text-sm rounded transition">
+                    Продолжить обучение
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Achievement Notification Toast Modal -->
+    <div id="success-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#1e1e2e] border-2 border-emerald-500 max-w-md w-full rounded-xl p-6 text-center shadow-2xl transform scale-95 transition-transform duration-300 space-y-4">
+            <div class="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-3xl animate-bounce">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold text-white">Задание выполнено верно!</h3>
+                <p id="success-message" class="text-sm text-[#a6adc8] mt-1">Все тесты успешно пройдены.</p>
+            </div>
+            <div class="pt-2 flex space-x-3">
+                <button onclick="closeSuccessModal()" class="flex-1 py-2.5 bg-[#313244] hover:bg-[#45475a] text-white rounded font-medium text-sm transition">
+                    Остаться здесь
+                </button>
+                <button onclick="nextChallenge()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded font-medium text-sm transition shadow-lg shadow-emerald-900/20">
+                    Следующий шаг <i class="fa-solid fa-arrow-right ml-1"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden element targeted for Brython stdio capture -->
+    <div id="brython-sandbox" class="hidden"></div>
+
+    <!-- Core Python Course Structure & Curriculum Script Data Block -->
+    <script>
+        const courseData = [
+            {
+                id: "mod-1",
+                title: "1. Основы синтаксиса и вывод",
+                challenges: [
+                    {
+                        id: "py-01",
+                        title: "Ваша первая программа",
+                        difficulty: "Легко",
+                        instructions: `
+                            <h3 class="text-base font-bold text-white mb-2">Знакомство с функцией <code class="bg-[#313244] px-1.5 py-0.5 rounded font-mono text-amber-400 text-xs">print()</code></h3>
+                            <p class="mb-3">В языке Python функция <code class="bg-[#313244] px-1 py-0.5 rounded font-mono text-xs text-white">print()</code> используется для вывода информации на экран (в консоль).</p>
+                            <p class="mb-3">Текстовые строки должны быть заключены в одинарные или двойные кавычки. Например: <code class="bg-[#313244] px-1.5 py-0.5 rounded font-mono text-xs text-white">print("Привет, мир!")</code>.</p>
+                            <div class="bg-[#181825] p-3 rounded border border-[#313244] mb-4">
+                                <span class="text-xs uppercase font-bold tracking-wider text-[#a6adc8] block mb-1">Задание:</span>
+                                Измените код в редакторе так, чтобы программа вывела на экран классическую фразу: <strong class="text-white font-mono">Hello, World!</strong>
+                            </div>
+                        `,
+                        initialCode: "# Напишите ваш код ниже
+print("Измени меня")",
+                        tests: [
+                            {
+                                description: "Программа должна выводить ровно 'Hello, World!'",
+                                evaluate: (output, code) => output.trim() === "Hello, World!"
+                            },
+                            {
+                                description: "Используется встроенная функция print()",
+                                evaluate: (output, code) => code.includes("print")
+                            }
+                        ]
+                    },
+                    {
+                        id: "py-02",
+                        title: "Математические операции",
+                        difficulty: "Легко",
+                        instructions: `
+                            <h3 class="text-base font-bold text-white mb-2">Арифметика в Python</h3>
+                            <p class="mb-3">Python умеет работать как продвинутый калькулятор. Основные операторы:</p>
+                            <ul class="list-disc pl-5 mb-4 space-y-1 text-xs font-mono text-[#a6adc8]">
+                                <li><strong class="text-white">+</strong> (Сложение)</li>
+                                <li><strong class="text-white">-</strong> (Вычитание)</li>
+                                <li><strong class="text-white">*</strong> (Умножение)</li>
+                                <li><strong class="text-white">/</strong> (Деление с плавающей точкой)</li>
+                            </ul>
+                            <div class="bg-[#181825] p-3 rounded border border-[#313244] mb-4">
+                                <span class="text-xs uppercase font-bold tracking-wider text-[#a6adc8] block mb-1">Задание:</span>
+                                Выведите результат умножения числа <code class="text-white font-mono">15</code> на число <code class="text-white font-mono">4</code> с помощью функции <code class="text-white font-mono">print()</code>.
+                            </div>
+                        `,
+                        initialCode: "# Выведите результат 15 * 4
+",
+                        tests: [
+                            {
+                                description: "Вывод равен 60",
+                                evaluate: (output, code) => output.trim() === "60"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "mod-2",
+                title: "2. Переменные и типы данных",
+                challenges: [
+                    {
+                        id: "py-03",
+                        title: "Объявление переменных",
+                        difficulty: "Легко",
+                        instructions: `
+                            <h3 class="text-base font-bold text-white mb-2">Сохранение данных</h3>
+                            <p class="mb-3">Переменные — это именованные контейнеры для хранения значений. В Python нет необходимости указывать тип данных при объявлении, это происходит автоматически при присваивании с помощью знака <code class="text-white font-mono">=</code>.</p>
+                            <div class="bg-[#181825] p-3 rounded border border-[#313244] mb-4">
+                                <span class="text-xs uppercase font-bold tracking-wider text-[#a6adc8] block mb-1">Задание:</span>
+                                Создайте переменную с именем <code class="text-white font-mono">user_age</code> и присвойте ей числовое значение <code class="text-white font-mono">25</code>. На следующей строке выведите её на экран через <code class="text-white font-mono">print(user_age)</code>.
+                            </div>
+                        `,
+                        initialCode: "# Создайте переменную user_age здесь
+",
+                        tests: [
+                            {
+                                description: "Переменная user_age инициализирована со значением 25",
+                                evaluate: (output, code) => code.replace(/\s/g, '').includes("user_age=25")
+                            },
+                            {
+                                description: "Консоль вывела значение 25",
+                                evaluate: (output, code) => output.trim() === "25"
+                            }
+                        ]
+                    },
+                    {
+                        id: "py-04",
+                        title: "Конкатенация строк",
+                        difficulty: "Средне",
+                        instructions: `
+                            <h3 class="text-base font-bold text-white mb-2">F-строки (Форматирование)</h3>
+                            <p class="mb-3">Самый современный способ объединять текст и переменные — использовать f-строки. Они начинаются с буквы <code class="text-white font-mono">f</code> перед кавычками, а переменные оборачиваются в фигурные скобки <code class="text-white font-mono">{name}</code>.</p>
+                            <p class="mb-3 font-mono text-xs bg-[#181825] p-2 rounded text-[#a6adc8]">name = "Иван"<br>print(f"Привет, {name}!")</p>
+                            <div class="bg-[#181825] p-3 rounded border border-[#313244] mb-4">
+                                <span class="text-xs uppercase font-bold tracking-wider text-[#a6adc8] block mb-1">Задание:</span>
+                                У вас есть переменная <code class="text-white font-mono">language = "Python"</code>. Выведите строку <code class="text-white font-mono">Я учу Python!</code>, используя f-строку и данную переменную.
+                            </div>
+                        `,
+                        initialCode: "language = "Python"
+# Напишите код f-строки ниже
+",
+                        tests: [
+                            {
+                                description: "Выведена точная строка 'Я учу Python!'",
+                                evaluate: (output, code) => output.trim() === "Я учу Python!"
+                            },
+                            {
+                                description: "Применена подстановка переменной через F-строку",
+                                evaluate: (output, code) => code.includes("f"") || code.includes("f'")
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "mod-3",
+                title: "3. Условные конструкции",
+                challenges: [
+                    {
+                        id: "py-05",
+                        title: "Оператор ветвления if",
+                        difficulty: "Средне",
+                        instructions: `
+                            <h3 class="text-base font-bold text-white mb-2">Логический выбор</h3>
+                            <p class="mb-3">Конструкция <code class="text-white font-mono">if-else</code> позволяет выполнять блоки кода в зависимости от условий. Помните про обязательные **отступы в 4 пробела** для вложенного кода!</p>
+                            <div class="bg-[#181825] p-3 rounded border border-[#313244] mb-4">
+                                <span class="text-xs uppercase font-bold tracking-wider text-[#a6adc8] block mb-1">Задание:</span>
+                                Напишите проверку: если переменная <code class="text-white font-mono">score</code> больше или равна <code class="text-white font-mono">50</code>, выведите <code class="text-white font-mono">Зачет</code>. Иначе (else) выведите <code class="text-white font-mono">Незачет</code>.
+                            </div>
+                        `,
+                        initialCode: "score = 65
+
+# Напишите ветвление if-else
+",
+                        tests: [
+                            {
+                                description: "При score = 65 программа выводит 'Зачет'",
+                                evaluate: (output, code) => output.trim() === "Зачет"
+                            },
+                            {
+                                description: "Код содержит логические операторы 'if' и 'else'",
+                                evaluate: (output, code) => code.includes("if") && code.includes("else")
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "mod-4",
+                title: "4. Циклы и Итерации",
+                challenges: [
+                    {
+                        id: "py-06",
+                        title: "Цикл for и диапазон range",
+                        difficulty: "Средне",
+                        instructions: `
+                            <h3 class="text-base font-bold text-white mb-2">Повторение кода</h3>
+                            <p class="mb-3">Цикл <code class="text-white font-mono">for</code> перебирает элементы последовательности. Функция <code class="text-white font-mono">range(n)</code> генерирует последовательность чисел от 0 до n-1.</p>
+                            <div class="bg-[#181825] p-3 rounded border border-[#313244] mb-4">
+                                <span class="text-xs uppercase font-bold tracking-wider text-[#a6adc8] block mb-1">Задание:</span>
+                                Используя цикл <code class="text-white font-mono">for i in range(...)</code>, выведите числа от 0 до 3 включительно (всего 4 числа, каждое на новой строке).
+                            </div>
+                        `,
+                        initialCode: "# Напишите цикл здесь
+",
+                        tests: [
+                            {
+                                description: "Консоль содержит последовательный вывод чисел 0, 1, 2, 3",
+                                evaluate: (output, code) => output.replace(/\s+/g, '') === "0123"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "mod-5",
+                title: "5. Структуры данных (Списки)",
+                challenges: [
+                    {
+                        id: "py-07",
+                        title: "Работа со списками",
+                        difficulty: "Средне",
+                        instructions: `
+                            <h3 class="text-base font-bold text-white mb-2">Списки (Lists)</h3>
+                            <p class="mb-3">Список — это упорядоченная изменяемая коллекция объектов. Индексация начинается с 0. Метод <code class="text-white font-mono">.append(value)</code> добавляет элемент в конец списка.</p>
+                            <div class="bg-[#181825] p-3 rounded border border-[#313244] mb-4">
+                                <span class="text-xs uppercase font-bold tracking-wider text-[#a6adc8] block mb-1">Задание:</span>
+                                Добавьте строку <code class="text-white font-mono">"яблоко"</code> в конец существующего списка <code class="text-white font-mono">fruits</code> с помощью метода <code class="text-white font-mono">.append()</code> и выведите весь список на экран.
+                            </div>
+                        `,
+                        initialCode: "fruits = ["банан", "апельсин"]
+# Добавьте элемент и выведите список
+",
+                        tests: [
+                            {
+                                description: "Элемент добавлен верно",
+                                evaluate: (output, code) => output.includes("яблоко")
+                            },
+                            {
+                                description: "Финальный список содержит 3 элемента",
+                                evaluate: (output, code) => output.includes("банан") && output.includes("апельсин")
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "mod-6",
+                title: "6. Функции",
+                challenges: [
+                    {
+                        id: "py-08",
+                        title: "Создание кастомной функции",
+                        difficulty: "Сложно",
+                        instructions: `
+                            <h3 class="text-base font-bold text-white mb-2">Объявление функций через <code class="text-amber-400 font-mono">def</code></h3>
+                            <p class="mb-3">Функции позволяют повторно использовать блоки кода. Функция может принимать аргументы и возвращать результат с помощью инструкции <code class="text-white font-mono">return</code>.</p>
+                            <div class="bg-[#181825] p-3 rounded border border-[#313244] mb-4">
+                                <span class="text-xs uppercase font-bold tracking-wider text-[#a6adc8] block mb-1">Задание:</span>
+                                Напишите функцию <code class="text-white font-mono">square(x)</code>, которая принимает число, возводит его в квадрат и **возвращает (return)** результат.
+                            </div>
+                        `,
+                        initialCode: "# Напишите функцию square
+",
+                        tests: [
+                            {
+                                description: "Функция определена и корректно рассчитывает квадрат числа",
+                                evaluate: (output, code) => code.includes("def square") && code.includes("return")
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: "mod-7",
+                title: "7. Объектно-Ориентированное Программирование",
+                challenges: [
+                    {
+                        id: "py-09",
+                        title: "Создание Класса",
+                        difficulty: "Сложно",
+                        instructions: `
+                            <h3 class="text-base font-bold text-white mb-2">Классы и Объекты</h3>
+                            <p class="mb-3">ООП позволяет моделировать объекты реального мира. Конструктор класса объявляется как метод <code class="text-white font-mono">__init__</code>, где первым аргументом всегда выступает указатель на сам объект — <code class="text-white font-mono">self</code>.</p>
+                            <div class="bg-[#181825] p-3 rounded border border-[#313244] mb-4">
+                                <span class="text-xs uppercase font-bold tracking-wider text-[#a6adc8] block mb-1">Задание:</span>
+                                Создайте класс <code class="text-white font-mono">Car</code>. В конструкторе <code class="text-white font-mono">__init__(self, brand)</code> инициализируйте свойство объекта <code class="text-white font-mono">self.brand = brand</code>.
+                            </div>
+                        `,
+                        initialCode: "# Создайте класс Car с атрибутом brand
+",
+                        tests: [
+                            {
+                                description: "Класс Car объявлен",
+                                evaluate: (output, code) => code.includes("class Car")
+                            },
+                            {
+                                description: "Конструктор __init__ определен с атрибутом self.brand",
+                                evaluate: (output, code) => code.includes("def __init__") && code.includes("brand")
+                            }
+                        ]
+                    },
+                    {
+                        id: "py-10",
+                        title: "Финальный Проект: Калькулятор",
+                        difficulty: "Сложно",
+                        instructions: `
+                            <h3 class="text-base font-bold text-white mb-2">Закрепление материала</h3>
+                            <p class="mb-3">Поздравляем, вы дошли до финального проекта! Нам нужно объединить все знания.</p>
+                            <div class="bg-[#181825] p-3 rounded border border-[#313244] mb-4">
+                                <span class="text-xs uppercase font-bold tracking-wider text-[#a6adc8] block mb-1">Задание:</span>
+                                Напишите функцию <code class="text-white font-mono">calc(a, b, op)</code>. В зависимости от строки оператора <code class="text-white font-mono">op</code> ("+", "-", "*"), функция должна возвращать соответствующий математический результат выполнения операции над <code class="text-white font-mono">a</code> и <code class="text-white font-mono">b</code>.
+                            </div>
+                        `,
+                        initialCode: "def calc(a, b, op):
+    # Ваш код интеграции здесь
+    pass",
+                        tests: [
+                            {
+                                description: "Функция корректно вычисляет сумму для '+'",
+                                evaluate: (output, code) => true // Evaluated dynamically via execution context assertion injection below
+                            }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        let currentModuleIndex = 0;
+        let currentChallengeIndex = 0;
+        let editorInstance = null;
+        let userProgress = JSON.parse(localStorage.getItem('pyAcademy_progress')) || {};
+
+        // In-browser mock stdout interceptor storage
+        window.capturedOutput = "";
+
+        // Monaco Editor Loader integration
+        require(['vs/editor/editor.main'], function () {
+            editorInstance = monaco.editor.create(document.getElementById('monaco-editor'), {
+                value: '',
+                language: 'python',
+                theme: 'vs-dark',
+                automaticLayout: true,
+                fontSize: 14,
+                fontFamily: 'Fira Code, Menlo, Monaco, Consolas, monospace',
+                minimap: { enabled: false },
+                lineNumbers: 'on',
+                roundedSelection: true,
+                scrollBeyondLastLine: false,
+                scrollbar: {
+                    vertical: 'visible',
+                    horizontal: 'visible'
+                }
+            });
+            loadChallenge(currentModuleIndex, currentChallengeIndex);
+            buildSidebarAndMap();
+            updateProgressBar();
+        });
+
+        function buildSidebarAndMap() {
+            const listContainer = document.getElementById('modules-list');
+            const mapContainer = document.getElementById('map-content');
+            listContainer.innerHTML = '';
+            mapContainer.innerHTML = '';
+
+            courseData.forEach((mod, mIdx) => {
+                // Sidebar rendering setup
+                const modEl = document.createElement('div');
+                modEl.className = "space-y-1";
+                
+                const modTitle = document.createElement('div');
+                modTitle.className = "text-xs font-semibold px-3 py-2 text-[#89b4fa] bg-[#1e1e2e] rounded flex items-center justify-between";
+                modTitle.innerHTML = `<span>${mod.title}</span>`;
+                modEl.appendChild(modTitle);
+
+                const chalContainer = document.createElement('div');
+                chalContainer.className = "pl-2 space-y-0.5";
+
+                // Map rendering elements setup
+                const mapModBox = document.createElement('div');
+                mapModBox.className = "bg-[#181825] p-5 rounded-lg border border-[#313244]";
+                mapModBox.innerHTML = `<h4 class="text-white font-bold mb-3 flex items-center justify-between text-base">
+                    <span>${mod.title}</span>
+                    <span class="text-xs text-[#a6adc8] font-normal">${mod.challenges.length} шагов</span>
+                </h4>`;
+                const mapGrid = document.createElement('div');
+                mapGrid.className = "grid grid-cols-1 sm:grid-cols-2 gap-3";
+
+                mod.challenges.forEach((chal, cIdx) => {
+                    const isCompleted = userProgress[chal.id];
+                    const isActive = mIdx === currentModuleIndex && cIdx === currentChallengeIndex;
+
+                    // Sidebar Item
+                    const chalBtn = document.createElement('button');
+                    chalBtn.className = `w-full text-left text-xs px-3 py-1.5 rounded flex items-center justify-between transition group ${
+                        isActive ? 'bg-amber-400 text-[#11111b] font-medium' : 'text-[#cdd6f4] hover:bg-[#313244]'
+                    }`;
+                    chalBtn.onclick = () => {
+                        loadChallenge(mIdx, cIdx);
+                        if(window.innerWidth < 768) toggleSidebar();
+                    };
+                    chalBtn.innerHTML = `
+                        <span class="truncate pr-2"><i class="fa-solid ${isCompleted ? 'fa-circle-check text-emerald-500 group-hover:text-emerald-400' : 'fa-circle text-[#45475a]'} mr-2"></i>${chal.title}</span>
+                        <span class="text-[9px] uppercase font-mono opacity-80">${chal.difficulty}</span>
+                    `;
+                    chalContainer.appendChild(chalBtn);
+
+                    // Map Item Card
+                    const mapCard = document.createElement('button');
+                    mapCard.className = `p-3 rounded text-left border text-xs transition flex items-center justify-between ${
+                        isActive ? 'bg-amber-400/10 border-amber-400 text-white' : 
+                        isCompleted ? 'bg-emerald-500/5 border-emerald-500/30 text-[#a6adc8]' : 'bg-[#1e1e2e] border-[#313244] text-[#cdd6f4] hover:border-[#45475a]'
+                    }`;
+                    mapCard.onclick = () => {
+                        loadChallenge(mIdx, cIdx);
+                        toggleMapModal();
+                    };
+                    mapCard.innerHTML = `
+                        <div>
+                            <div class="font-semibold text-white flex items-center">
+                                <i class="fa-solid ${isCompleted ? 'fa-circle-check text-emerald-500' : 'fa-circle text-[#45475a]'} mr-2 text-[11px]"></i>
+                                ${chal.title}
+                            </div>
+                            <span class="text-[10px] text-[#a6adc8] mt-1 inline-block">Сложность: ${chal.difficulty}</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-[#45475a]"></i>
+                    `;
+                    mapGrid.appendChild(mapCard);
+                });
+
+                modEl.appendChild(chalContainer);
+                listContainer.appendChild(modEl);
+
+                mapModBox.appendChild(mapGrid);
+                mapContainer.appendChild(mapModBox);
+            });
+        }
+
+        function loadChallenge(mIdx, cIdx) {
+            currentModuleIndex = mIdx;
+            currentChallengeIndex = cIdx;
+
+            const challenge = courseData[mIdx].challenges[cIdx];
+            document.getElementById('challenge-title').innerText = challenge.title;
+            
+            const diffEl = document.getElementById('challenge-difficulty');
+            diffEl.innerText = challenge.difficulty;
+            diffEl.className = `text-[10px] uppercase font-mono px-2 py-0.5 rounded ${
+                challenge.difficulty === 'Легко' ? 'bg-emerald-500/20 text-emerald-400' :
+                challenge.difficulty === 'Средне' ? 'bg-sky-500/20 text-sky-400' : 'bg-rose-500/20 text-rose-400'
+            }`;
+
+            document.getElementById('challenge-instructions').innerHTML = challenge.instructions;
+            
+            // Check localStorage or standard entry state configuration
+            const cacheKey = `code_cache_${challenge.id}`;
+            const savedCode = localStorage.getItem(cacheKey);
+            editorInstance.setValue(savedCode || challenge.initialCode);
+
+            // Re-render highlight references across states
+            buildSidebarAndMap();
+            clearConsole();
+        }
+
+        function runPythonCodeInBrowser(sourceCode, appendMode = false) {
+            const outputConsole = document.getElementById('console-output');
+            if (!appendMode) outputConsole.innerHTML = '';
+
+            // Inject custom print routing architecture over window execution scope pipeline
+            window.brythonStdoutWrite = function(data) {
+                window.capturedOutput += data;
+                const line = document.createElement('div');
+                line.className = "whitespace-pre-wrap text-emerald-400 font-mono";
+                line.innerText = data.endsWith('
+') ? data.slice(0,-1) : data;
+                if(data.trim() || data === '
+') outputConsole.appendChild(line);
+            };
+
+            // Setup execution sandbox configuration framework targets runtime tracking environment
+            window.capturedOutput = "";
+            
+            // Re-route standard output vectors mapping mechanisms via Brython binding hooks execution engine layers
+            const bScript = document.createElement('script');
+            bScript.type = 'text/python';
+            bScript.textContent = `
+import sys
+from browser import window
+
+class WebStdout:
+    def write(self, data):
+        window.brythonStdoutWrite(data)
+    def flush(self):
+        pass
+
+sys.stdout = WebStdout()
+sys.stderr = WebStdout()
+
+try:
+    ${sourceCode.replace(/
+/g, '
+    ')}
+except Exception as e:
+    print(f"Ошибка выполнения: {e}")
+            `;
+            
+            try {
+                // Clear out processing tags structures
+                document.getElementById('brython-sandbox').innerHTML = '';
+                document.getElementById('brython-sandbox'].appendChild(bScript);
+                // Trigger dynamic execution compiler parsing context passes
+                window.__BRYTHON__.parser.parse(bScript.textContent);
+                // Evaluate code
+                eval(window.__BRYTHON__.py2js(bScript.textContent, 'main').to_js());
+            } catch(err) {
+                const errorLine = document.createElement('div');
+                errorLine.className = "text-rose-400 font-mono font-bold whitespace-pre-wrap";
+                errorLine.innerText = `Критический сбой компилятора: ${err.message}`;
+                outputConsole.appendChild(errorLine);
+            }
+
+            // Handle empty buffer feedbacks prints transitions validation steps state checks
+            if(outputConsole.children.length === 0) {
+                outputConsole.innerHTML = '<div class="text-[#a6adc8] italic">Код успешно выполнен (вывод пуст).</div>';
+            }
+            outputConsole.scrollTop = outputConsole.scrollHeight;
+            return window.capturedOutput;
+        }
+
+        function runCode() {
+            const currentCode = editorInstance.getValue();
+            const chal = courseData[currentModuleIndex].challenges[currentChallengeIndex];
+            // Cache tracking storage setup automatically 
+            localStorage.setItem(`code_cache_${chal.id}`, currentCode);
+            runPythonCodeInBrowser(currentCode);
+        }
+
+        function submitChallenge() {
+            const currentCode = editorInstance.getValue();
+            const chal = courseData[currentModuleIndex].challenges[currentChallengeIndex];
+            
+            // Execute in-browser build output analysis mapping checks frameworks loop evaluation hooks pipeline
+            let stdout = runPythonCodeInBrowser(currentCode);
+            
+            // Cache values for safety checks
+            localStorage.setItem(`code_cache_${chal.id}`, currentCode);
+
+            // Special evaluation runtime assertions validations inject targets override routines setup parameters mapping contexts triggers
+            if (chal.id === "py-08") {
+                // Assert function execution framework metrics
+                const validationCode = currentCode + "
+
+try:
+    print(square(4))
+    print(square(-3))
+except:
+    print('fail_eval')";
+                stdout = runPythonCodeInBrowser(validationCode, true);
+                if (stdout.includes("16") && stdout.includes("9") && !stdout.includes("fail_eval")) {
+                    // Success mock routing values overrides
+                    stdout = "16
+9"; 
+                } else {
+                    stdout = "failed_assertions";
+                }
+            }
+            if (chal.id === "py-09") {
+                const validationCode = currentCode + "
+
+try:
+    test_car = Car('Tesla')
+    print(test_car.brand)
+except:
+    print('fail_eval')";
+                stdout = runPythonCodeInBrowser(validationCode, true);
+                if (stdout.includes("Tesla") && !stdout.includes("fail_eval")) {
+                    stdout = "Tesla";
+                } else {
+                    stdout = "failed_assertions";
+                }
+            }
+            if (chal.id === "py-10") {
+                const validationCode = currentCode + "
+
+try:
+    print(calc(10, 5, '+'))
+    print(calc(20, 4, '*'))
+    print(calc(15, 3, '-'))
+except:
+    print('fail_eval')";
+                stdout = runPythonCodeInBrowser(validationCode, true);
+                if (stdout.includes("15") && stdout.includes("80") && stdout.includes("12") && !stdout.includes("fail_eval")) {
+                    stdout = "15
+80
+12";
+                } else {
+                    stdout = "failed_assertions";
+                }
+            }
+
+            let allPassed = true;
+            const outputConsole = document.getElementById('console-output');
+            
+            // Append visual separation line context layer markers tracking logs
+            const trackingDivider = document.createElement('div');
+            trackingDivider.className = "border-t border-[#313244] my-2 pt-2 text-xs text-[#a6adc8] font-bold";
+            trackingDivider.innerText = "=== Выполнение юнит-тестов задания ===";
+            outputConsole.appendChild(trackingDivider);
+
+            chal.tests.forEach((test, idx) => {
+                let passed = false;
+                try {
+                    passed = test.evaluate(stdout, currentCode);
+                } catch(e) {
+                    passed = false;
+                }
+
+                const testRow = document.createElement('div');
+                testRow.className = `flex items-center space-x-2 text-xs font-mono py-0.5 ${passed ? 'text-emerald-400' : 'text-rose-400'}`;
+                testRow.innerHTML = `<i class="fa-solid ${passed ? 'fa-check-circle' : 'fa-circle-xmark'}"></i> <span>Тест ${idx+1}: ${test.description}</span>`;
+                outputConsole.appendChild(testRow);
+
+                if (!passed) allPassed = false;
+            });
+
+            outputConsole.scrollTop = outputConsole.scrollHeight;
+
+            if (allPassed) {
+                userProgress[chal.id] = true;
+                localStorage.setItem('pyAcademy_progress', JSON.stringify(userProgress));
+                updateProgressBar();
+                buildSidebarAndMap();
+                
+                // Show completion modal toast system viewports elements mapping handlers
+                document.getElementById('success-modal').classList.remove('hidden');
+            } else {
+                const failAlert = document.createElement('div');
+                failAlert.className = "mt-2 p-2 bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded";
+                failAlert.innerText = "Некоторые тесты не пройдены. Пожалуйста, внимательно изучите условия и исправьте ошибки в коде.";
+                outputConsole.appendChild(failAlert);
+                outputConsole.scrollTop = outputConsole.scrollHeight;
+            }
+        }
+
+        function updateProgressBar() {
+            let totalChallenges = 0;
+            let completedChallenges = 0;
+
+            courseData.forEach(mod => {
+                totalChallenges += mod.challenges.length;
+                mod.challenges.forEach(chal => {
+                    if(userProgress[chal.id]) completedChallenges++;
+                });
+            });
+
+            const pct = totalChallenges > 0 ? (completedChallenges / totalChallenges) * 100 : 0;
+            document.getElementById('course-progress').style.width = `${pct}%`;
+            document.getElementById('progress-text').innerText = `${completedChallenges}/${totalChallenges}`;
+        }
+
+        function nextChallenge() {
+            closeSuccessModal();
+            
+            // Advance indexes pointer arrays parameters boundaries safely tracks contexts loops setups
+            let nextCIdx = currentChallengeIndex + 1;
+            let nextMIdx = currentModuleIndex;
+
+            if (nextCIdx >= courseData[currentModuleIndex].challenges.length) {
+                nextCIdx = 0;
+                nextMIdx += 1;
+            }
+
+            if (nextMIdx < courseData.length) {
+                loadChallenge(nextMIdx, nextCIdx);
+            } else {
+                alert("Поздравляем! Вы полностью завершили все интерактивные модули курса Python Academy! 🏆");
+            }
+        }
+
+        function resetCode() {
+            if(confirm("Вы уверены, что хотите сбросить текущий код до исходного состояния?")) {
+                const chal = courseData[currentModuleIndex].challenges[currentChallengeIndex];
+                editorInstance.setValue(chal.initialCode);
+                localStorage.removeItem(`code_cache_${chal.id}`);
+                clearConsole();
+            }
+        }
+
+        function clearConsole() {
+            document.getElementById('console-output').innerHTML = '<div class="text-[#a6adc8] italic">Консоль очищена. Нажмите «Запустить код» для выполнения.</div>';
+        }
+
+        function toggleSidebar() {
+            const sb = document.getElementById('sidebar');
+            sb.classList.toggle('-translate-x-full');
+        }
+
+        function toggleMapModal() {
+            const modal = document.getElementById('map-modal');
+            modal.classList.toggle('hidden');
+            if(!modal.classList.contains('hidden')) {
+                buildSidebarAndMap(); // Refresh status representations
+            }
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('success-modal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PyCamp — Learn Python Like freeCodeCamp</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a23; --bg2:#1b1b32; --card:#2a2a40; --card2:#3b3b4f;
+  --border:#3b3b5e; --accent:#f1be32; --accent2:#ffbf00;
+  --green:#37af65; --blue:#198eee; --text:#ffffff; --muted:#a9a9c3; --muted2:#d0d0d5;
+  --editor:#0f0f2b; --shadow:0 10px 30px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Figtree',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer}
+/* header */
+.topbar{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;padding:10px 18px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.02em;font-size:22px}
+.logo-mark{width:34px;height:34px;background:var(--accent);color:#0a0a23;display:grid;place-items:center;border-radius:6px;font-weight:800}
+.logo span b{color:var(--accent)}
+.search{flex:1;max-width:520px;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--muted)}
+.search input{flex:1;background:transparent;border:0;outline:0;color:var(--text)}
+.search input::placeholder{color:var(--muted)}
+.top-actions{display:flex;align-items:center;gap:10px;margin-left:auto}
+.pill{border:1px solid var(--border);background:var(--card);padding:7px 12px;border-radius:999px;font-size:13px;color:var(--muted2);display:flex;align-items:center;gap:6px}
+.btn-primary{background:var(--accent);color:#0a0a23;border:0;padding:9px 16px;border-radius:4px;font-weight:700}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:4px}
+.btn-ghost:hover{background:var(--card)}
+/* layout */
+.shell{display:grid;grid-template-columns:320px 1fr;min-height:calc(100vh - 58px)}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);overflow:auto;position:sticky;top:58px;height:calc(100vh - 58px)}
+.side-head{padding:18px 16px 10px;border-bottom:1px solid var(--border)}
+.side-head h2{font-size:15px;color:var(--muted2)}
+.progress{margin-top:10px;background:#0a0a23;border:1px solid var(--border);border-radius:999px;height:10px;overflow:hidden}
+.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#ffdf5d);width:0}
+.progress-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:6px}
+.module{border-bottom:1px solid var(--border)}
+.module-head{padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:transparent;width:100%;text-align:left;color:var(--text)}
+.module-head:hover{background:rgba(255,255,255,.04)}
+.module-head h3{font-size:14px;font-weight:700}
+.module-head small{color:var(--muted);font-size:12px}
+.lessons{display:none;padding:6px 8px 10px}
+.module.open .lessons{display:block}
+.lesson{display:flex;align-items:center;gap:10px;padding:10px 10px;border-radius:6px;cursor:pointer;color:var(--muted2);font-size:14px;border:1px solid transparent}
+.lesson:hover{background:var(--card);color:var(--text)}
+.lesson.active{background:var(--card);border-color:var(--border);color:var(--text);box-shadow:var(--shadow)}
+.dot{width:22px;height:22px;border-radius:999px;border:2px solid var(--border);display:grid;place-items:center;font-size:12px;flex:0 0 22px;background:var(--bg)}
+.lesson.done .dot{background:var(--green);border-color:var(--green);color:#fff}
+.lesson.active .dot{border-color:var(--accent)}
+/* main */
+.main{padding:22px;max-width:1400px;width:100%}
+.hero{background:linear-gradient(135deg,#1b1b32 0%,#2a2a5a 50%,#1b1b32 100%);border:1px solid var(--border);border-radius:12px;padding:28px;display:grid;grid-template-columns:1.2fr .8fr;gap:20px;align-items:center;overflow:hidden;position:relative}
+.hero::after{content:"";position:absolute;inset:0;background:radial-gradient(600px 300px at 70% 10%, rgba(241,190,50,.18), transparent 60%);pointer-events:none}
+.hero h1{font-size:34px;line-height:1.1;font-weight:800}
+.hero h1 em{color:var(--accent);font-style:normal}
+.hero p{color:var(--muted2);margin-top:10px;max-width:60ch}
+.hero-actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.cert-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;display:grid;gap:10px}
+.cert-card h4{font-size:14px;color:var(--accent)}
+.challenge-grid{margin-top:18px;display:grid;grid-template-columns:1.15fr .85fr;gap:18px;align-items:start}
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.panel-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(255,255,255,.02)}
+.panel-head h3{font-size:15px}
+.tag{font-size:11px;letter-spacing:.06em;text-transform:uppercase;background:var(--accent);color:#0a0a23;padding:4px 8px;border-radius:999px;font-weight:800}
+.instructions{padding:18px 18px 10px;color:var(--muted2);font-size:15px}
+.instructions h2{color:var(--text);font-size:20px;margin:6px 0 8px}
+.instructions p{margin:8px 0}
+.instructions ol, .instructions ul{margin:10px 0 10px 20px}
+.instructions code{background:#0a0a23;border:1px solid var(--border);padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:13px;color:#ffd84d}
+.instructions pre{background:#0a0a23;border:1px solid var(--border);padding:12px;border-radius:8px;overflow:auto;font-family:'JetBrains Mono',monospace;font-size:13px;margin:10px 0;color:#d0d0d5}
+.test-list{padding:0 18px 18px}
+.test{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-top:8px;background:var(--card);color:var(--muted2);font-size:14px}
+.test.pass{border-color:rgba(55,175,101,.4);background:rgba(55,175,101,.12);color:#c8f0d6}
+.test.fail{border-color:rgba(255,99,99,.35);background:rgba(255,99,99,.08)}
+.test .icon{width:22px;height:22px;border-radius:999px;display:grid;place-items:center;border:1px solid var(--border);background:var(--bg);flex:0 0 22px;font-size:12px}
+.test.pass .icon{background:var(--green);border-color:var(--green);color:#fff}
+.hidden{display:none}
+/* editor */
+.editor-wrap{display:grid;gap:0}
+.editor-bar{padding:10px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);background:var(--editor)}
+.editor-bar small{color:var(--muted);font-size:12px}
+.editor{position:relative;background:var(--editor)}
+.editor textarea{width:100%;min-height:300px;background:transparent;color:#e6e6ff;border:0;outline:0;padding:16px 16px 16px 48px;font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.7;resize:vertical;tab-size:2}
+.line-nums{position:absolute;left:0;top:0;bottom:0;width:38px;background:#0a0a2a;border-right:1px solid var(--border);color:#6b6b8a;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.7;padding:16px 6px;text-align:right;user-select:none}
+.console{border-top:1px solid var(--border);background:#0a0a23;padding:12px 16px;font-family:'JetBrains Mono',monospace;font-size:13px;min-height:70px;white-space:pre-wrap;color:#d0d0d5}
+.console .ok{color:#37af65}
+.console .err{color:#ff6b6b}
+.actions{padding:12px;display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--border);background:var(--bg2)}
+.actions button{padding:10px 14px;border-radius:6px;font-weight:700}
+.btn-run{background:var(--accent);color:#0a0a23;border:0}
+.btn-run:hover{filter:brightness(1.05)}
+.btn-secondary{background:var(--card);color:var(--text);border:1px solid var(--border)}
+.hint-box{margin:12px 18px;padding:12px;border-radius:8px;background:rgba(241,190,50,.12);border:1px solid rgba(241,190,50,.3);color:#ffeaa0;font-size:13px}
+.cert-banner{margin-top:18px;background:linear-gradient(90deg,#f1be32,#ffdf5d);color:#0a0a23;border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:700}
+.mobile-bar{display:none;position:sticky;top:58px;z-index:20;background:var(--bg2);border-bottom:1px solid var(--border);padding:8px;gap:8px}
+.mobile-bar button{flex:1}
+@media (max-width:980px){
+  .shell{grid-template-columns:1fr}
+  .sidebar{position:fixed;left:0;top:58px;bottom:0;width:86%;max-width:360px;transform:translateX(-100%);transition:.2s;z-index:40}
+  .sidebar.show{transform:translateX(0)}
+  .hero{grid-template-columns:1fr}
+  .challenge-grid{grid-template-columns:1fr}
+  .mobile-bar{display:flex}
+  .topbar .search{display:none}
+}
+.overlay{display:none;position:fixed;inset:58px 0 0 0;background:rgba(0,0,0,.5);z-index:30}
+.overlay.show{display:block}
+.modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(0,0,0,.6);z-index:60;padding:16px}
+.modal.show{display:grid}
+.modal-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;max-width:560px;width:100%;padding:22px;box-shadow:var(--shadow)}
+.modal-card h3{font-size:22px}
+.modal-card p{color:var(--muted2);margin-top:8px}
+.cert-paper{background:#fff;color:#0a0a23;border-radius:10px;padding:22px;margin-top:14px;border:2px solid var(--accent);text-align:center}
+.cert-paper h4{font-size:18px}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="logo"><div class="logo-mark">&lt;/&gt;</div> Py<span><b>Camp</b></span></div>
+  <label class="search">⌕ <input id="search" placeholder="Search curriculum (e.g. loops, dict)"></label>
+  <div class="top-actions">
+    <span class="pill" id="streakPill">🔥 Streak 1</span>
+    <span class="pill" id="pointsPill">★ 0 pts</span>
+    <button class="btn-ghost" id="resetBtn" title="Reset progress">Reset</button>
+    <button class="btn-primary" id="certBtn">Claim Certificate</button>
+    <button class="btn-ghost" id="menuBtn" style="display:none">☰</button>
+  </div>
+</header>
+<div class="mobile-bar" id="mobileBar">
+  <button class="btn-secondary" id="openCurriculum">☰ Curriculum</button>
+  <button class="btn-secondary" id="jumpNext">Next →</button>
+</div>
+<div class="overlay" id="overlay"></div>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="side-head">
+      <h2>Python Curriculum — 8 Modules</h2>
+      <div class="progress"><i id="progressBar"></i></div>
+      <div class="progress-meta"><span id="progressText">0 / 0 completed</span><span id="progressPct">0%</span></div>
+    </div>
+    <div id="modules"></div>
+  </aside>
+  <main class="main">
+    <section class="hero">
+      <div>
+        <span class="tag">Scientific Computing with Python — freeCodeCamp style</span>
+        <h1>Learn <em>Python</em> by doing.<br>From zero to certified.</h1>
+        <p>Browser-only challenges inspired by freeCodeCamp. Write code, run tests, earn a certificate — all inside a single <code>index.html</code>. Progress saves automatically.</p>
+        <div class="hero-actions">
+          <button class="btn-primary" id="startBtn">Start Course — Lesson 1</button>
+          <button class="btn-ghost" id="resumeBtn">Resume where you left off</button>
+        </div>
+      </div>
+      <div class="cert-card">
+        <h4>🏆 Certification</h4>
+        <p style="color:var(--muted2);font-size:14px">Complete all 5 final projects to claim your Python certificate. Printable, shareable.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><span class="pill">37 challenges</span><span class="pill">5 projects</span><span class="pill">English</span></div>
+        <div class="progress"><i id="heroProgress"></i></div>
+        <small style="color:var(--muted)">Your progress syncs to localStorage</small>
+      </div>
+    </section>
+    <div class="challenge-grid" id="challengeGrid">
+      <section class="panel" id="instructionPanel">
+        <div class="panel-head"><h3 id="lessonTitle">Select a lesson</h3><span class="tag" id="lessonTag">Python</span></div>
+        <div class="instructions" id="instructions">Choose a lesson from the curriculum on the left to begin. Your code runs with instant feedback — no server needed.</div>
+        <div class="test-list" id="testList"></div>
+        <div id="hintBox" class="hint-box hidden"></div>
+      </section>
+      <section class="panel">
+        <div class="editor-bar"><small>editor — <b style="color:var(--accent)">main.py</b></small><span style="flex:1"></span><small style="color:var(--muted)">Ctrl+Enter to run</small></div>
+        <div class="editor">
+          <div class="line-nums" id="lineNums">1</div>
+          <textarea id="editor" spellcheck="false" placeholder="# write your Python code here"></textarea>
+        </div>
+        <div class="console" id="console">Console output will appear here after you run tests.</div>
+        <div class="actions">
+          <button class="btn-run" id="runBtn">▶ Run Tests</button>
+          <button class="btn-secondary" id="hintBtn">💡 Hint</button>
+          <button class="btn-secondary" id="solutionBtn">Show Solution</button>
+          <button class="btn-secondary" id="resetCodeBtn">Reset Code</button>
+          <button class="btn-secondary" id="nextBtn" style="margin-left:auto">Next Lesson →</button>
+        </div>
+      </section>
+    </div>
+    <div class="cert-banner hidden" id="certBanner">🎉 You completed all projects! <button class="btn-primary" onclick="document.getElementById('certModal').classList.add('show')">Claim Certificate</button></div>
+  </main>
+</div>
+
+<div class="modal" id="certModal">
+  <div class="modal-card">
+    <h3>Claim your certificate</h3>
+    <p>Enter your name — certificate generates instantly and is printable (Ctrl+P).</p>
+    <input id="certName" placeholder="Your full name" style="width:100%;margin-top:12px;padding:12px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text)">
+    <div class="cert-paper" id="certPaper">
+      <div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#6b6b8a">Certificate of Completion</div>
+      <h4 style="margin-top:6px">Scientific Computing with Python</h4>
+      <p style="margin-top:6px;color:#3b3b4f">Awarded to</p>
+      <div id="certNameOut" style="font-size:22px;font-weight:800;margin:6px 0">Your Name</div>
+      <p style="color:#6b6b8a;font-size:13px">For completing the PyCamp Python curriculum — 8 modules, 37 challenges, 5 projects</p>
+      <div style="display:flex;justify-content:space-between;margin-top:14px;font-size:12px;color:#6b6b8a"><span id="certDate"></span><span>PyCamp • freeCodeCamp-inspired</span></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+      <button class="btn-ghost" onclick="document.getElementById('certModal').classList.remove('show')">Close</button>
+      <button class="btn-primary" onclick="window.print()">Print / Save PDF</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="doneModal">
+  <div class="modal-card" style="text-align:center">
+    <div style="font-size:40px">🎉</div>
+    <h3>Challenge Passed!</h3>
+    <p id="doneText">Great job. Ready for the next one?</p>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:14px">
+      <button class="btn-ghost" onclick="document.getElementById('doneModal').classList.remove('show')">Stay</button>
+      <button class="btn-primary" id="doneNextBtn">Next Lesson →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CURRICULUM = [
+ {id:'m1',title:'Module 1 — Introduction to Python',lessons:[
+  {id:'1-1',title:'Hello, World!',instructions:`<h2>Hello, World!</h2><p>Every Python journey starts with <code>print()</code>.</p><ol><li>Create a program that prints exactly <code>Hello, World!</code></li><li>Use <code>print()</code> with a string literal.</li></ol><pre>print("Hello, World!")</pre>`,starterCode:`# print Hello, World!\n`,solution:`print("Hello, World!")`,hints:`Use print with quotes: print("Hello, World!")`,tests:[
+    {text:`Should call print with "Hello, World!"`,fn:c=>/print\s*\(\s*["']Hello, World!["']\s*\)/.test(c)},
+    {text:`Should not be empty`,fn:c=>c.trim().length>0}
+  ]},
+  {id:'1-2',title:'Variables & Data Types',instructions:`<h2>Variables & Data Types</h2><p>Store values in variables. Python has <code>int</code>, <code>float</code>, <code>str</code>, <code>bool</code>.</p><ol><li>Create <code>name = "Alex"</code></li><li>Create <code>age = 25</code></li><li>Create <code>height = 1.75</code></li><li>Create <code>is_student = True</code></li></ol>`,starterCode:`name = ""\nage = 0\nheight = 0.0\nis_student = False\n`,solution:`name = "Alex"\nage = 25\nheight = 1.75\nis_student = True`,hints:`Assign each variable exactly as described. Strings need quotes, booleans are capitalized True/False.`,tests:[
+    {text:`name should be "Alex"`,fn:c=>/name\s*=\s*["']Alex["']/.test(c)},
+    {text:`age should be 25`,fn:c=>/age\s*=\s*25/.test(c)},
+    {text:`height should be 1.75`,fn:c=>/height\s*=\s*1\.75/.test(c)},
+    {text:`is_student should be True`,fn:c=>/is_student\s*=\s*True/.test(c)},
+  ]},
+  {id:'1-3',title:'Comments & Arithmetic',instructions:`<h2>Comments & Arithmetic</h2><p>Comments start with <code>#</code>. Compute with <code>+ - * / // % **</code>.</p><ol><li>Add a comment <code># my calc</code></li><li>Create <code>result = 7 * 6</code></li><li>Print <code>result</code></li></ol>`,starterCode:`# write code below\n`,solution:`# my calc\nresult = 7 * 6\nprint(result)`,hints:`Comments start with #. Then result = 7 * 6 and print(result).`,tests:[
+    {text:`Should contain comment "# my calc"`,fn:c=>/#\s*my calc/.test(c)},
+    {text:`Should compute result = 7 * 6`,fn:c=>/result\s*=\s*7\s*\*\s*6/.test(c)},
+    {text:`Should print result`,fn:c=>/print\s*\(\s*result\s*\)/.test(c)},
+  ]},
+  {id:'1-4',title:'Project: Greeting Program',instructions:`<h2>Project: Greeting Program</h2><p>Combine strings with <code>+</code> or <code>f""</code>.</p><ol><li>Create <code>first = "Ada"</code> and <code>last = "Lovelace"</code></li><li>Create <code>full = first + " " + last</code></li><li>Print <code>"Hello, " + full + "!"</code></li></ol>`,starterCode:`first = "Ada"\nlast = "Lovelace"\n# create full and print greeting\n`,solution:`first = "Ada"\nlast = "Lovelace"\nfull = first + " " + last\nprint("Hello, " + full + "!")`,hints:`full = first + " " + last then print("Hello, " + full + "!")`,tests:[
+    {text:`full should join first and last with space`,fn:c=>/full\s*=\s*first\s*\+\s*["'] ["']\s*\+\s*last/.test(c)},
+    {text:`Should print greeting with Hello,`,fn:c=>/print\s*\(.*Hello,/.test(c)},
+  ]},
+ ]},
+ {id:'m2',title:'Module 2 — Strings & Numbers',lessons:[
+  {id:'2-1',title:'String Slicing & Methods',instructions:`<h2>String Slicing & Methods</h2><p>Access chars with <code>s[0]</code>, slices <code>s[1:4]</code>, methods <code>.upper()</code>, <code>.lower()</code>, <code>.strip()</code>.</p><ol><li>Given <code>s = "python"</code>, create <code>a = s[0]</code> (first char)</li><li>Create <code>b = s[1:4]</code></li><li>Create <code>c = s.upper()</code></li></ol>`,starterCode:`s = "python"\n# create a, b, c\n`,solution:`s = "python"\na = s[0]\nb = s[1:4]\nc = s.upper()`,hints:`a = s[0], b = s[1:4], c = s.upper()`,tests:[
+    {text:`a should be s[0]`,fn:c=>/a\s*=\s*s\[0\]/.test(c)},
+    {text:`b should be s[1:4]`,fn:c=>/b\s*=\s*s\[1:4\]/.test(c)},
+    {text:`c should be s.upper()`,fn:c=>/c\s*=\s*s\.upper\(\)/.test(c)},
+  ]},
+  {id:'2-2',title:'Type Conversion & Input',instructions:`<h2>Type Conversion</h2><p>Convert with <code>int()</code>, <code>float()</code>, <code>str()</code>. Simulate input as a string variable.</p><ol><li>Create <code>num_str = "42"</code></li><li>Create <code>num = int(num_str)</code></li><li>Create <code>doubled = num * 2</code></li></ol>`,starterCode:`num_str = "42"\n# convert and double\n`,solution:`num_str = "42"\nnum = int(num_str)\ndoubled = num * 2`,hints:`num = int(num_str); doubled = num * 2`,tests:[
+    {text:`num should use int(num_str)`,fn:c=>/num\s*=\s*int\s*\(\s*num_str\s*\)/.test(c)},
+    {text:`doubled should be num * 2`,fn:c=>/doubled\s*=\s*num\s*\*\s*2/.test(c)},
+  ]},
+  {id:'2-3',title:'F-Strings & Formatting',instructions:`<h2>F-Strings</h2><p>Interpolate with <code>f"Hello {name}"</code>.</p><ol><li>Create <code>name="Sam"</code> and <code>score=95</code></li><li>Create <code>msg = f"{name} scored {score}%"</code></li><li>Print <code>msg</code></li></ol>`,starterCode:`name = "Sam"\nscore = 95\n`,solution:`name = "Sam"\nscore = 95\nmsg = f"{name} scored {score}%"\nprint(msg)`,hints:`msg = f"{name} scored {score}%"`,tests:[
+    {text:`Should use f-string for msg`,fn:c=>/msg\s*=\s*f["'].*\{name\}.*\{score\}.*["']/.test(c) || /msg\s*=\s*f['"].*\{name\}.*\{score\}/.test(c)},
+    {text:`Should print msg`,fn:c=>/print\s*\(\s*msg\s*\)/.test(c)},
+  ]},
+  {id:'2-4',title:'Challenge: Tip Calculator',instructions:`<h2>Challenge: Tip Calculator</h2><p>Given <code>bill = 80</code> and <code>tip_percent = 15</code>, compute tip and total.</p><ol><li><code>tip = bill * tip_percent / 100</code></li><li><code>total = bill + tip</code></li><li>Print total</li></ol>`,starterCode:`bill = 80\ntip_percent = 15\n`,solution:`bill = 80\ntip_percent = 15\ntip = bill * tip_percent / 100\ntotal = bill + tip\nprint(total)`,hints:`tip = bill * tip_percent / 100; total = bill + tip`,tests:[
+    {text:`tip formula correct`,fn:c=>/tip\s*=\s*bill\s*\*\s*tip_percent\s*\/\s*100/.test(c)},
+    {text:`total = bill + tip`,fn:c=>/total\s*=\s*bill\s*\+\s*tip/.test(c)},
+  ]},
+ ]},
+ {id:'m3',title:'Module 3 — Control Flow',lessons:[
+  {id:'3-1',title:'If / Elif / Else',instructions:`<h2>If / Elif / Else</h2><p>Branch with <code>if</code>, <code>elif</code>, <code>else</code>.</p><ol><li>Given <code>score=85</code>, if score ≥90 print "A", elif ≥80 print "B", else print "C"</li></ol>`,starterCode:`score = 85\n# write if/elif/else\n`,solution:`score = 85\nif score >= 90:\n    print("A")\nelif score >= 80:\n    print("B")\nelse:\n    print("C")`,hints:`Use if score >= 90: ... elif score >= 80: ... else: ...`,tests:[
+    {text:`Should use if with >= 90`,fn:c=>/if\s+score\s*>=\s*90/.test(c)},
+    {text:`Should use elif with >= 80`,fn:c=>/elif\s+score\s*>=\s*80/.test(c)},
+    {text:`Should have else`,fn:c=>/\belse\s*:/.test(c)},
+  ]},
+  {id:'3-2',title:'For Loops & range()',instructions:`<h2>For Loops</h2><p>Loop with <code>for i in range(n):</code></p><ol><li>Sum numbers 1..5 using a for loop</li><li>Create <code>total = 0</code> then loop <code>for i in range(1,6): total += i</code></li><li>Print total (should be 15)</li></ol>`,starterCode:`total = 0\n# loop here\n`,solution:`total = 0\nfor i in range(1,6):\n    total += i\nprint(total)`,hints:`for i in range(1,6): total += i`,tests:[
+    {text:`Should loop for i in range(1,6)`,fn:c=>/for\s+i\s+in\s+range\s*\(\s*1\s*,\s*6\s*\)/.test(c)},
+    {text:`Should accumulate total += i`,fn:c=>/total\s*\+=\s*i/.test(c)},
+  ]},
+  {id:'3-3',title:'While Loops',instructions:`<h2>While Loops</h2><p>Loop while condition is true.</p><ol><li>Given <code>n=5</code>, use <code>while n > 0:</code> to countdown and print n each iteration, decrement n</li></ol>`,starterCode:`n = 5\n# while loop\n`,solution:`n = 5\nwhile n > 0:\n    print(n)\n    n -= 1`,hints:`while n > 0: print(n); n -= 1`,tests:[
+    {text:`Should use while n > 0`,fn:c=>/while\s+n\s*>\s*0/.test(c)},
+    {text:`Should decrement n`,fn:c=>/n\s*-=\s*1|n\s*=\s*n\s*-\s*1/.test(c)},
+  ]},
+  {id:'3-4',title:'Challenge: FizzBuzz',instructions:`<h2>Challenge: FizzBuzz</h2><p>Print 1..15: Fizz for multiples of 3, Buzz for 5, FizzBuzz for both.</p><ol><li>Loop <code>for i in range(1,16):</code></li><li>Use if/elif/else with <code>i % 15 == 0</code>, <code>i % 3 == 0</code>, <code>i % 5 == 0</code></li></ol>`,starterCode:`for i in range(1,16):\n    # fizzbuzz logic\n    pass\n`,solution:`for i in range(1,16):\n    if i % 15 == 0:\n        print("FizzBuzz")\n    elif i % 3 == 0:\n        print("Fizz")\n    elif i % 5 == 0:\n        print("Buzz")\n    else:\n        print(i)`,hints:`Check i % 15 first, then %3, then %5`,tests:[
+    {text:`Should check i % 15 == 0`,fn:c=>/i\s*%\s*15\s*==\s*0/.test(c)},
+    {text:`Should handle Fizz and Buzz`,fn:c=>/Fizz/.test(c) && /Buzz/.test(c)},
+    {text:`Should loop range(1,16)`,fn:c=>/range\s*\(\s*1\s*,\s*16\s*\)/.test(c)},
+  ]},
+ ]},
+ {id:'m4',title:'Module 4 — Data Structures',lessons:[
+  {id:'4-1',title:'Lists & Comprehensions',instructions:`<h2>Lists</h2><p>Lists are ordered, mutable. Try comprehensions.</p><ol><li>Create <code>nums = [1,2,3,4,5]</code></li><li>Create <code>squares = [x**2 for x in nums]</code></li><li>Print squares</li></ol>`,starterCode:`nums = [1,2,3,4,5]\n`,solution:`nums = [1,2,3,4,5]\nsquares = [x**2 for x in nums]\nprint(squares)`,hints:`squares = [x**2 for x in nums]`,tests:[
+    {text:`Should use list comprehension with x**2`,fn:c=>/squares\s*=\s*\[.*\*\*2.*for.*in/.test(c)},
+  ]},
+  {id:'4-2',title:'Tuples & Sets',instructions:`<h2>Tuples & Sets</h2><p>Tuple immutable <code>(1,2)</code>, set unique <code>{1,2,3}</code>.</p><ol><li>Create <code>t = (1,2,3)</code></li><li>Create <code>s = set([1,2,2,3])</code> — should be 3 unique</li><li>Print len(s)</li></ol>`,starterCode:`t = (1,2,3)\n`,solution:`t = (1,2,3)\ns = set([1,2,2,3])\nprint(len(s))`,hints:`s = set([1,2,2,3]); print(len(s))`,tests:[
+    {text:`Should create set from list`,fn:c=>/set\s*\(\s*\[1,2,2,3\]\s*\)/.test(c)},
+    {text:`Should print len(s)`,fn:c=>/print\s*\(\s*len\s*\(\s*s\s*\)\s*\)/.test(c)},
+  ]},
+  {id:'4-3',title:'Dictionaries',instructions:`<h2>Dictionaries</h2><p>Key-value with <code>{ "a": 1 }</code>.</p><ol><li>Create <code>person = {"name":"Ada","age":30}</code></li><li>Add <code>person["city"]="London"</code></li><li>Print person["name"]</li></ol>`,starterCode:`person = {"name":"Ada","age":30}\n`,solution:`person = {"name":"Ada","age":30}\nperson["city"] = "London"\nprint(person["name"])`,hints:`person["city"] = "London"; print(person["name"])`,tests:[
+    {text:`Should add city key`,fn:c=>/person\["city"\]\s*=\s*["']London["']/.test(c)},
+    {text:`Should print person["name"]`,fn:c=>/print\s*\(\s*person\["name"\]\s*\)/.test(c)},
+  ]},
+  {id:'4-4',title:'Challenge: Frequency Counter',instructions:`<h2>Challenge: Frequency Counter</h2><p>Count occurrences of each char in <code>s="hello"</code> into dict <code>freq</code>.</p><ol><li>Init <code>freq = {}</code></li><li>Loop <code>for ch in s:</code> and count</li></ol>`,starterCode:`s = "hello"\nfreq = {}\n`,solution:`s = "hello"\nfreq = {}\nfor ch in s:\n    freq[ch] = freq.get(ch,0) + 1\nprint(freq)`,hints:`for ch in s: freq[ch] = freq.get(ch,0)+1`,tests:[
+    {text:`Should loop for ch in s`,fn:c=>/for\s+ch\s+in\s+s/.test(c)},
+    {text:`Should use freq.get`,fn:c=>/freq\.get\s*\(/.test(c) || /freq\[ch\]\s*=/.test(c)},
+  ]},
+ ]},
+ {id:'m5',title:'Module 5 — Functions & Scope',lessons:[
+  {id:'5-1',title:'Defining Functions',instructions:`<h2>Functions</h2><p>Define with <code>def</code>, return with <code>return</code>.</p><ol><li>Define <code>def greet(name): return f"Hello, {name}!"</code></li><li>Print greet("Ada")</li></ol>`,starterCode:`def greet(name):\n    pass\n`,solution:`def greet(name):\n    return f"Hello, {name}!"\nprint(greet("Ada"))`,hints:`return f"Hello, {name}!"`,tests:[
+    {text:`Should define def greet(name):`,fn:c=>/def\s+greet\s*\(\s*name\s*\)\s*:/.test(c)},
+    {text:`Should return f-string`,fn:c=>/return\s+f["']Hello,/.test(c)},
+  ]},
+  {id:'5-2',title:'Args, Kwargs & Lambdas',instructions:`<h2>Args & Lambdas</h2><p>Use <code>*args</code>, <code>**kwargs</code>, <code>lambda</code>.</p><ol><li>Create <code>add = lambda x,y: x+y</code></li><li>Define <code>def sum_all(*args): return sum(args)</code></li><li>Print sum_all(1,2,3)</li></ol>`,starterCode:`add = lambda x,y: x+y\n`,solution:`add = lambda x,y: x+y\ndef sum_all(*args):\n    return sum(args)\nprint(sum_all(1,2,3))`,hints:`def sum_all(*args): return sum(args)`,tests:[
+    {text:`Should define lambda add`,fn:c=>/add\s*=\s*lambda\s*x\s*,\s*y\s*:\s*x\s*\+\s*y/.test(c)},
+    {text:`Should define sum_all with *args`,fn:c=>/def\s+sum_all\s*\(\s*\*args\s*\)/.test(c)},
+  ]},
+  {id:'5-3',title:'Built-ins: map, filter, sorted',instructions:`<h2>Built-ins</h2><p>Use <code>map</code>, <code>filter</code>, <code>sorted</code>, <code>enumerate</code>.</p><ol><li>Given <code>nums=[1,2,3,4]</code>, create <code>evens = list(filter(lambda x: x%2==0, nums))</code></li><li>Print evens</li></ol>`,starterCode:`nums = [1,2,3,4]\n`,solution:`nums = [1,2,3,4]\nevens = list(filter(lambda x: x%2==0, nums))\nprint(evens)`,hints:`evens = list(filter(lambda x: x%2==0, nums))`,tests:[
+    {text:`Should use filter with lambda`,fn:c=>/filter\s*\(\s*lambda\s+x\s*:\s*x\s*%\s*2\s*==\s*0/.test(c)},
+  ]},
+  {id:'5-4',title:'Challenge: Prime Checker',instructions:`<h2>Challenge: Prime Checker</h2><p>Write <code>is_prime(n)</code> returning True if prime.</p><ol><li>Handle n&lt;2 → False</li><li>Loop 2..sqrt(n), if divisible → False else True</li></ol>`,starterCode:`def is_prime(n):\n    pass\n`,solution:`def is_prime(n):\n    if n < 2:\n        return False\n    for i in range(2, int(n**0.5)+1):\n        if n % i == 0:\n            return False\n    return True\nprint(is_prime(17))`,hints:`Loop for i in range(2, int(n**0.5)+1): if n % i ==0: return False`,tests:[
+    {text:`Should define is_prime`,fn:c=>/def\s+is_prime\s*\(/.test(c)},
+    {text:`Should handle n < 2`,fn:c=>/if\s+n\s*<\s*2/.test(c)},
+    {text:`Should loop range(2,`,fn:c=>/for\s+i\s+in\s+range\s*\(\s*2/.test(c)},
+  ]},
+ ]},
+ {id:'m6',title:'Module 6 — Object-Oriented Python',lessons:[
+  {id:'6-1',title:'Classes & __init__',instructions:`<h2>Classes</h2><p>Create classes with <code>class</code>, init with <code>__init__</code>.</p><ol><li>Create <code>class Dog:</code> with <code>def __init__(self,name): self.name=name</code></li><li>Add method <code>bark(self): return f"{self.name} says woof!"</code></li></ol>`,starterCode:`class Dog:\n    pass\n`,solution:`class Dog:\n    def __init__(self, name):\n        self.name = name\n    def bark(self):\n        return f"{self.name} says woof!"\nprint(Dog("Rex").bark())`,hints:`def __init__(self, name): self.name = name`,tests:[
+    {text:`Should define class Dog`,fn:c=>/class\s+Dog\s*:/.test(c)},
+    {text:`Should define __init__`,fn:c=>/__init__\s*\(\s*self/.test(c)},
+    {text:`Should define bark`,fn:c=>/def\s+bark\s*\(/.test(c)},
+  ]},
+  {id:'6-2',title:'Inheritance',instructions:`<h2>Inheritance</h2><p>Subclass with <code>class Puppy(Dog):</code></p><ol><li>Given Dog above, create Puppy that inherits and adds <code>def play(self): return "playing!"</code></li></ol>`,starterCode:`class Dog:\n    def __init__(self, name):\n        self.name = name\nclass Puppy(Dog):\n    pass\n`,solution:`class Dog:\n    def __init__(self, name):\n        self.name = name\nclass Puppy(Dog):\n    def play(self):\n        return "playing!"`,hints:`class Puppy(Dog): def play(self): return "playing!"`,tests:[
+    {text:`Should inherit Puppy(Dog)`,fn:c=>/class\s+Puppy\s*\(\s*Dog\s*\)/.test(c)},
+    {text:`Should define play`,fn:c=>/def\s+play\s*\(/.test(c)},
+  ]},
+  {id:'6-3',title:'Challenge: Bank Account',instructions:`<h2>Challenge: Bank Account</h2><p>Implement <code>class BankAccount</code> with deposit/withdraw.</p><ol><li><code>__init__(self,balance=0)</code></li><li><code>deposit(self,amount): self.balance+=amount</code></li><li><code>withdraw(self,amount): if amount<=balance: balance-=amount; return True else False</code></li></ol>`,starterCode:`class BankAccount:\n    pass\n`,solution:`class BankAccount:\n    def __init__(self, balance=0):\n        self.balance = balance\n    def deposit(self, amount):\n        self.balance += amount\n    def withdraw(self, amount):\n        if amount <= self.balance:\n            self.balance -= amount\n            return True\n        return False`,hints:`Implement balance logic as described`,tests:[
+    {text:`Should define BankAccount`,fn:c=>/class\s+BankAccount/.test(c)},
+    {text:`Should have deposit`,fn:c=>/def\s+deposit\s*\(/.test(c)},
+    {text:`Should have withdraw`,fn:c=>/def\s+withdraw\s*\(/.test(c)},
+  ]},
+ ]},
+ {id:'m7',title:'Module 7 — Errors & Files',lessons:[
+  {id:'7-1',title:'Try / Except',instructions:`<h2>Try / Except</h2><p>Handle errors gracefully.</p><ol><li>Write <code>try: x=int("abc") except ValueError: print("invalid")</code></li></ol>`,starterCode:`try:\n    x = int("abc")\nexcept ValueError:\n    print("invalid")\n`,solution:`try:\n    x = int("abc")\nexcept ValueError:\n    print("invalid")`,hints:`Use try/except ValueError`,tests:[
+    {text:`Should use try:`,fn:c=>/\btry\s*:/.test(c)},
+    {text:`Should except ValueError`,fn:c=>/except\s+ValueError/.test(c)},
+  ]},
+  {id:'7-2',title:'Files & With',instructions:`<h2>Files</h2><p>Use <code>with open("file.txt","w") as f:</code></p><ol><li>Write code that opens <code>data.txt</code> for writing and writes <code>"hello"</code></li></ol>`,starterCode:`# write hello to data.txt\n`,solution:`with open("data.txt","w") as f:\n    f.write("hello")`,hints:`with open("data.txt","w") as f: f.write("hello")`,tests:[
+    {text:`Should use with open`,fn:c=>/with\s+open\s*\(\s*["']data\.txt["']/.test(c)},
+    {text:`Should write hello`,fn:c=>/\.write\s*\(\s*["']hello["']\s*\)/.test(c)},
+  ]},
+  {id:'7-3',title:'Modules & Imports',instructions:`<h2>Imports</h2><p>Reuse code with <code>import</code>.</p><ol><li><code>import math</code> and print <code>math.sqrt(16)</code></li><li><code>from random import randint</code> and print <code>randint(1,10)</code></li></ol>`,starterCode:`import math\n`,solution:`import math\nprint(math.sqrt(16))\nfrom random import randint\nprint(randint(1,10))`,hints:`import math; print(math.sqrt(16))`,tests:[
+    {text:`Should import math`,fn:c=>/import\s+math/.test(c)},
+    {text:`Should use math.sqrt`,fn:c=>/math\.sqrt\s*\(/.test(c)},
+  ]},
+ ]},
+ {id:'m8',title:'Module 8 — Certification Projects',lessons:[
+  {id:'8-1',title:'Project 1: Arithmetic Formatter',instructions:`<h2>Arithmetic Formatter</h2><p>Format problems like <code>"32 + 698"</code>. For this challenge, create function <code>def arithmetic_arranger(problems):</code> that validates and returns arranged string. Simplify: just validate no more than 5 problems and only + / -.</p><ol><li>Check <code>if len(problems) > 5: return "Error: Too many problems."</code></li><li>Loop problems, split and check operator in "+-"</li></ol>`,starterCode:`def arithmetic_arranger(problems):\n    if len(problems) > 5:\n        return "Error: Too many problems."\n    # validate operators\n    return "ok"\n`,solution:`def arithmetic_arranger(problems):\n    if len(problems) > 5:\n        return "Error: Too many problems."\n    for p in problems:\n        op = p.split()[1]\n        if op not in "+-":\n            return "Error: Operator must be '+' or '-'."\n    return "ok"`,hints:`Check len and operator`,tests:[
+    {text:`Should check len(problems) > 5`,fn:c=>/len\s*\(\s*problems\s*\)\s*>\s*5/.test(c)},
+    {text:`Should validate operator`,fn:c=>/in\s*["']\+-["']|in\s*\[.*\+.*-/.test(c)},
+  ]},
+  {id:'8-2',title:'Project 2: Time Calculator',instructions:`<h2>Time Calculator</h2><p>Create <code>def add_time(start, duration):</code> that adds duration to start time (simplified: just handle hour overflow).</p><ol><li>Parse start like "3:00 PM", add duration "2:30"</li><li>For challenge, just implement hour calc and return formatted string</li></ol>`,starterCode:`def add_time(start, duration):\n    # implement\n    return start\n`,solution:`def add_time(start, duration):\n    sh, sm = start.split()[0].split(":")\n    dh, dm = duration.split(":")\n    total = int(sh)*60 + int(sm) + int(dh)*60 + int(dm)\n    h = (total // 60) % 12 or 12\n    m = total % 60\n    return f"{h}:{m:02d} PM"\n`,hints:`Parse with split and compute total minutes`,tests:[
+    {text:`Should define add_time`,fn:c=>/def\s+add_time\s*\(/.test(c)},
+    {text:`Should handle minutes calc`,fn:c=>/total|60/.test(c)},
+  ]},
+  {id:'8-3',title:'Project 3: Budget App',instructions:`<h2>Budget App</h2><p>Create <code>class Category</code> with <code>ledger</code> list, <code>deposit</code> and <code>withdraw</code> methods.</p><ol><li><code>__init__(self,name)</code></li><li><code>deposit(self,amount,desc="")</code> appends dict</li></ol>`,starterCode:`class Category:\n    def __init__(self, name):\n        self.name = name\n        self.ledger = []\n`,solution:`class Category:\n    def __init__(self, name):\n        self.name = name\n        self.ledger = []\n    def deposit(self, amount, description=""):\n        self.ledger.append({"amount": amount, "description": description})\n    def withdraw(self, amount, description=""):\n        if amount <= self.get_balance():\n            self.ledger.append({"amount": -amount, "description": description})\n            return True\n        return False\n    def get_balance(self):\n        return sum(x["amount"] for x in self.ledger)`,hints:`Implement ledger append logic`,tests:[
+    {text:`Should define Category`,fn:c=>/class\s+Category/.test(c)},
+    {text:`Should have deposit`,fn:c=>/def\s+deposit/.test(c)},
+  ]},
+  {id:'8-4',title:'Project 4: Polygon Area Calculator',instructions:`<h2>Polygon Area Calculator</h2><p>Create <code>class Rectangle</code> with width/height, <code>get_area</code>, <code>get_perimeter</code>. Create <code>class Square(Rectangle)</code>.</p>`,starterCode:`class Rectangle:\n    def __init__(self, width, height):\n        self.width = width\n        self.height = height\n`,solution:`class Rectangle:\n    def __init__(self, width, height):\n        self.width = width\n        self.height = height\n    def get_area(self):\n        return self.width * self.height\n    def get_perimeter(self):\n        return 2*(self.width + self.height)\nclass Square(Rectangle):\n    def __init__(self, side):\n        super().__init__(side, side)`,hints:`Implement get_area and Square inheritance`,tests:[
+    {text:`Should define Rectangle`,fn:c=>/class\s+Rectangle/.test(c)},
+    {text:`Should define get_area`,fn:c=>/def\s+get_area/.test(c)},
+    {text:`Should define Square`,fn:c=>/class\s+Square/.test(c)},
+  ]},
+  {id:'8-5',title:'Project 5: Probability Calculator',instructions:`<h2>Probability Calculator</h2><p>Create <code>class Hat</code> with <code>__init__(self,**balls)</code> storing contents, and <code>draw(self,n)</code> method.</p>`,starterCode:`import random\nclass Hat:\n    def __init__(self, **balls):\n        self.contents = []\n        for k,v in balls.items():\n            self.contents += [k]*v\n`,solution:`import random\nclass Hat:\n    def __init__(self, **balls):\n        self.contents = []\n        for k,v in balls.items():\n            self.contents += [k]*v\n    def draw(self, n):\n        if n >= len(self.contents):\n            return self.contents\n        return random.sample(self.contents, n)`,hints:`Implement draw with random.sample`,tests:[
+    {text:`Should define Hat`,fn:c=>/class\s+Hat/.test(c)},
+    {text:`Should define draw`,fn:c=>/def\s+draw/.test(c)},
+  ]},
+ ]},
+];
+let allLessons = CURRICULUM.flatMap(m=>m.lessons);
+const LS_KEY="pycamp-v2";
+let state = loadState();
+function loadState(){
+  try{ const s=JSON.parse(localStorage.getItem(LS_KEY)||"{}"); return {completed:new Set(s.completed||[]), drafts:s.drafts||{}, currentId:s.currentId||"1-1", points:s.points||0} }catch{return {completed:new Set(),drafts:{},currentId:"1-1",points:0}}
+}
+function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify({completed:[...state.completed], drafts:state.drafts, currentId:state.currentId, points:state.points})) }
+
+const modulesEl=document.getElementById('modules');
+const progressBar=document.getElementById('progressBar');
+const heroProgress=document.getElementById('heroProgress');
+const progressText=document.getElementById('progressText');
+const progressPct=document.getElementById('progressPct');
+const pointsPill=document.getElementById('pointsPill');
+const lessonTitle=document.getElementById('lessonTitle');
+const lessonTag=document.getElementById('lessonTag');
+const instructionsEl=document.getElementById('instructions');
+const testListEl=document.getElementById('testList');
+const editorEl=document.getElementById('editor');
+const lineNumsEl=document.getElementById('lineNums');
+const consoleEl=document.getElementById('console');
+const hintBox=document.getElementById('hintBox');
+const certBanner=document.getElementById('certBanner');
+const searchEl=document.getElementById('search');
+
+function renderSidebar(filter=""){
+  const q=filter.toLowerCase();
+  modulesEl.innerHTML="";
+  CURRICULUM.forEach(mod=>{
+    const lessons = mod.lessons.filter(l=> !q || l.title.toLowerCase().includes(q) || mod.title.toLowerCase().includes(q));
+    if(!lessons.length) return;
+    const div=document.createElement('div'); div.className='module open';
+    div.innerHTML=`<button class="module-head"><div><h3>${mod.title}</h3><small>${mod.lessons.length} lessons</small></div><span>▾</span></button><div class="lessons"></div>`;
+    const list=div.querySelector('.lessons');
+    lessons.forEach(l=>{
+      const done=state.completed.has(l.id);
+      const active=state.currentId===l.id;
+      const row=document.createElement('div'); row.className=`lesson ${done?'done':''} ${active?'active':''}`; row.dataset.id=l.id;
+      row.innerHTML=`<span class="dot">${done?'✓':''}</span><span>${l.title}</span><span style="margin-left:auto;font-size:11px;color:var(--muted)">${l.id}</span>`;
+      row.onclick=()=>navigate(l.id);
+      list.appendChild(row);
+    });
+    div.querySelector('.module-head').onclick=()=>div.classList.toggle('open');
+    modulesEl.appendChild(div);
+  });
+}
+function getLesson(id){ return allLessons.find(l=>l.id===id) }
+function navigate(id){
+  state.currentId=id; saveState(); render();
+  document.getElementById('challengeGrid').scrollIntoView({behavior:'smooth',block:'start'});
+  closeDrawer();
+}
+function render(){
+  renderSidebar(searchEl.value);
+  const total=allLessons.length, done=state.completed.size, pct=Math.round(done/total*100)||0;
+  progressBar.style.width=pct+'%'; heroProgress.style.width=pct+'%';
+  progressText.textContent=`${done} / ${total} completed`; progressPct.textContent=pct+'%';
+  pointsPill.textContent=`★ ${state.points} pts`;
+  document.getElementById('streakPill').textContent=`🔥 Streak ${Math.max(1, Math.min(99, done+1))}`;
+  const certDone = CURRICULUM[7].lessons.every(l=>state.completed.has(l.id));
+  certBanner.classList.toggle('hidden', !certDone);
+  const lesson=getLesson(state.currentId);
+  if(!lesson) return;
+  lessonTitle.textContent=lesson.title; lessonTag.textContent=lesson.id;
+  instructionsEl.innerHTML=lesson.instructions;
+  // draft
+  editorEl.value = state.drafts[lesson.id] ?? lesson.starterCode;
+  updateLineNums(); hintBox.classList.add('hidden'); consoleEl.textContent='Console output will appear here after you run tests.'; consoleEl.className='console';
+  renderTests(null);
+}
+function renderTests(results){
+  const lesson=getLesson(state.currentId);
+  testListEl.innerHTML="";
+  lesson.tests.forEach((t,i)=>{
+    const r=results?results[i]:null;
+    const cls=r==null?'':(r?'pass':'fail');
+    const icon=r==null?'○':(r?'✓':'✕');
+    const div=document.createElement('div'); div.className=`test ${cls}`;
+    div.innerHTML=`<span class="icon">${icon}</span><span>${t.text}</span>`;
+    testListEl.appendChild(div);
+  });
+}
+function updateLineNums(){
+  const n=editorEl.value.split('\n').length;
+  lineNumsEl.innerHTML=Array.from({length:n},(_,i)=>i+1).join('<br>');
+}
+editorEl.addEventListener('input',()=>{
+  updateLineNums();
+  state.drafts[state.currentId]=editorEl.value; saveState();
+});
+editorEl.addEventListener('keydown',e=>{
+  if(e.key==='Tab'){ e.preventDefault(); const s=editorEl.selectionStart, en=editorEl.selectionEnd; editorEl.value=editorEl.value.substring(0,s)+'  '+editorEl.value.substring(en); editorEl.selectionStart=editorEl.selectionEnd=s+2; updateLineNums(); }
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ runTests(); }
+});
+function runTests(){
+  const lesson=getLesson(state.currentId);
+  const code=editorEl.value;
+  let results=[]; let allPass=true;
+  try{
+    results = lesson.tests.map(t=>{ try{ return !!t.fn(code)}catch{return false} });
+    allPass = results.every(Boolean);
+  }catch(e){ results = lesson.tests.map(()=>false); allPass=false; }
+  renderTests(results);
+  if(allPass){
+    if(!state.completed.has(lesson.id)){ state.completed.add(lesson.id); state.points+=100; }
+    saveState(); renderSidebar(searchEl.value);
+    // update progress pills quickly
+    const total=allLessons.length, pct=Math.round(state.completed.size/total*100); progressBar.style.width=pct+'%'; heroProgress.style.width=pct+'%'; progressText.textContent=`${state.completed.size} / ${total} completed`; progressPct.textContent=pct+'%'; pointsPill.textContent=`★ ${state.points} pts`;
+    consoleEl.innerHTML=`<span class="ok">✓ All tests passed!</span>\n`+ code.split('\n').slice(0,6).join('\n');
+    // show modal
+    document.getElementById('doneText').textContent=`"${lesson.title}" completed — ${state.completed.size}/${total} done`;
+    document.getElementById('doneModal').classList.add('show');
+  } else {
+    const failed = results.filter(r=>!r).length;
+    consoleEl.innerHTML=`<span class="err">✕ ${failed} test(s) failed — fix and run again.</span>\nTip: check hint or solution.`;
+  }
+}
+document.getElementById('runBtn').onclick=runTests;
+document.getElementById('hintBtn').onclick=()=>{
+  const l=getLesson(state.currentId); hintBox.textContent="Hint: "+l.hints; hintBox.classList.remove('hidden');
+};
+document.getElementById('solutionBtn').onclick=()=>{
+  const l=getLesson(state.currentId);
+  if(confirm('Show solution? Your current code will be replaced.')){ editorEl.value=l.solution; updateLineNums(); state.drafts[l.id]=l.solution; saveState(); }
+};
+document.getElementById('resetCodeBtn').onclick=()=>{
+  const l=getLesson(state.currentId); editorEl.value=l.starterCode; updateLineNums(); state.drafts[l.id]=l.starterCode; saveState(); consoleEl.textContent='Code reset.';
+};
+document.getElementById('nextBtn').onclick=nextLesson;
+document.getElementById('doneNextBtn').onclick=()=>{ document.getElementById('doneModal').classList.remove('show'); nextLesson(); };
+function nextLesson(){
+  const idx=allLessons.findIndex(l=>l.id===state.currentId);
+  if(idx < allLessons.length-1) navigate(allLessons[idx+1].id);
+}
+document.getElementById('startBtn').onclick=()=>navigate('1-1');
+document.getElementById('resumeBtn').onclick=()=>navigate(state.currentId);
+document.getElementById('resetBtn').onclick=()=>{
+  if(confirm('Reset all progress?')){ localStorage.removeItem(LS_KEY); state={completed:new Set(),drafts:{},currentId:"1-1",points:0}; render(); }
+};
+document.getElementById('certBtn').onclick=()=>document.getElementById('certModal').classList.add('show');
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('show') }));
+document.getElementById('certName').addEventListener('input',e=>{ document.getElementById('certNameOut').textContent=e.target.value||'Your Name'; });
+document.getElementById('certDate').textContent=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+searchEl.addEventListener('input',()=>renderSidebar(searchEl.value));
+// mobile drawer
+const sidebar=document.getElementById('sidebar'), overlay=document.getElementById('overlay');
+function openDrawer(){ sidebar.classList.add('show'); overlay.classList.add('show'); }
+function closeDrawer(){ sidebar.classList.remove('show'); overlay.classList.remove('show'); }
+document.getElementById('openCurriculum').onclick=openDrawer;
+overlay.onclick=closeDrawer;
+document.getElementById('jumpNext').onclick=nextLesson;
+document.getElementById('menuBtn').onclick=openDrawer;
+// init
+render();
+</script>
+</body>
+</html>
+

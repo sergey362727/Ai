@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PyCamp: Курс Python в браузере</title>
+    <!-- Подключение Brython для выполнения Python в браузере -->
+    <script src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/brython@3.11.0/brython_stdlib.js"></script>
+    <style>
+        :root {
+            --primary-color: #007acc;
+            --dark-bg: #1e1e1e;
+            --light-bg: #f5f5f5;
+            --text-dark: #333;
+            --text-light: #f8f8f2;
+            --border-color: #ddd;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background-color: var(--light-bg);
+        }
+        .sidebar {
+            width: 280px;
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            padding: 20px 10px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+        .sidebar h2 {
+            text-align: center;
+            font-size: 1.4rem;
+            margin-bottom: 25px;
+            color: var(--primary-color);
+        }
+        .lesson-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .lesson-list li {
+            margin-bottom: 10px;
+        }
+        .lesson-list button {
+            width: 100%;
+            text-align: left;
+            padding: 10px 15px;
+            border: none;
+            background: none;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 0.95rem;
+            border-radius: 5px;
+            transition: background 0.2s;
+        }
+        .lesson-list button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .lesson-list button.active {
+            background-color: var(--primary-color);
+            font-weight: bold;
+        }
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        .lesson-header {
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+        .lesson-title {
+            margin: 0 0 10px 0;
+            color: var(--dark-bg);
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            flex-grow: 1;
+        }
+        .code-editor, .console-output {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        .editor-header, .console-header {
+            padding: 10px;
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        #python-code {
+            flex-grow: 1;
+            width: 100%;
+            border: none;
+            padding: 15px;
+            font-family: "Fira Code", Monaco, Consolas, monospace;
+            font-size: 0.95rem;
+            resize: none;
+            background-color: #f9f9f9;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+        #console {
+            flex-grow: 1;
+            width: 100%;
+            border: none;
+            padding: 15px;
+            font-family: "Fira Code", Monaco, Consolas, monospace;
+            font-size: 0.95rem;
+            background-color: #000;
+            color: #0f0;
+            border-bottom-left-radius: 8px;
+            border-bottom-right-radius: 8px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        button.run-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+        button.run-btn:hover {
+            background-color: #005a99;
+        }
+        .validation-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+        }
+        #expected-answer {
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 0.95rem;
+            flex-grow: 1;
+        }
+        button.check-btn {
+            padding: 8px 15px;
+            border: 1px solid var(--border-color);
+            background-color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        .message {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        .message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        @media (max-width: 900px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                position: absolute;
+                left: -280px;
+                top: 0;
+                height: 100vh;
+                transition: left 0.3s;
+                z-index: 100;
+            }
+            .sidebar.active {
+                left: 0;
+            }
+            .main-content {
+                padding-left: 20px;
+            }
+            .menu-toggle {
+                display: block;
+            }
+        }
+        .menu-toggle {
+            display: none;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: var(--dark-bg);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            z-index: 110;
+        }
+    </style>
+</head>
+<body onload="brython({debug: 0, indexURL: '#!/'})">
+
+<button class="menu-toggle" aria-label="Открыть меню">☰</button>
+
+<nav class="sidebar" id="sidebar">
+    <h2>PyCamp: Python</h2>
+    <ul class="lesson-list">
+        <li><button data-lesson="1" class="active">Урок 1: Вывод текста (print)</button></li>
+        <li><button data-lesson="2">Урок 2: Переменные и типы данных</button></li>
+        <li><button data-lesson="3">Урок 3: Условные операторы (if/else)</button></li>
+        <li><button data-lesson="4">Урок 4: Циклы (for, while)</button></li>
+        <li><button data-lesson="5">Урок 5: Списки (Lists)</button></li>
+    </ul>
+</nav>
+
+<main class="main-content">
+    <div class="lesson-header">
+        <h1 class="lesson-title" id="lesson-title">Урок 1: Вывод текста (print)</h1>
+        <p id="lesson-description">Функция print() выводит данные на экран. Это самая первая команда, которую изучают программисты.</p>
+    </div>
+
+    <div class="grid-container">
+        <div class="code-editor">
+            <div class="editor-header">Код (Python)</div>
+            <textarea id="python-code">print("Привет, мир!")
+print("Я учусь программировать на Python.")</textarea>
+        </div>
+        <div class="console-output">
+            <div class="console-header">Консоль (Вывод)</div>
+            <div id="console"></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="run-btn" id="run-code">▶️ Запустить код</button>
+    </div>
+</main>
+
+<script type="text/python">
+from browser import document, alert, sys
+
+# Перенаправление стандартного вывода в блок консоли
+class ConsoleOutput:
+    def write(self, data):
+        document['console'].text += data
+    def flush(self):
+        pass
+
+sys.stdout = ConsoleOutput()
+sys.stderr = ConsoleOutput()
+
+def run_python_code(ev):
+    document['console'].text = "" # Очистка консоли
+    code = document['python-code'].value
+    try:
+        exec(code, {})
+    except Exception as e:
+        document['console'].text += f"Ошибка:\n{e}"
+
+document['run-code'].bind('click', run_python_code)
+
+# Логика переключения бокового меню на мобильных устройствах
+def toggle_menu(ev):
+    sidebar = document['sidebar']
+    if 'active' in sidebar.className:
+        sidebar.classList.remove('active')
+    else:
+        sidebar.classList.add('active')
+
+fire_toggle = document.select('.menu-toggle')[0]
+fire_toggle.bind('click', toggle_menu)
+</script>
+</body>
+</html>
