@@ -3,43 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Навигация по AI-страницам</title>
+    <title>AI Workspace</title>
     <style>
         :root {
-            --bg-color: #0d1117;
-            --container-bg: #161b22;
-            --border-color: #30363d;
-            --text-color: #c9d1d9;
-            --link-color: #58a6ff;
-            --link-hover: #1f6feb;
-            --item-hover: #21262d;
+            --bg-color: #000000;
+            --container-bg: rgba(8, 8, 8, 0.72);
+            --border-color: rgba(255, 255, 255, 0.12);
+            --text-primary: #ffffff;
+            --text-secondary: #777777;
+            --item-hover: rgba(255, 255, 255, 0.06);
+            --star-glow: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 40px 20px;
+            color: var(--text-primary);
+            min-height: 100vh;
             display: flex;
+            align-items: center;
             justify-content: center;
+            padding: 40px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Интегрированная детализированная подложка новой хромированной звезды */
+        .background-image {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 620px;
+            height: 620px;
+            /* Векторная схема орбиты и четырехконечной звезды для гарантированного отображения */
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://w3.org" viewBox="0 0 100 100"><path d="M10 62 C 25 40, 75 25, 90 42 C 75 60, 25 65, 10 62 Z" fill="none" stroke="white" stroke-width="0.8" opacity="0.4"/><path d="M65 25 L 65 65 M 45 48 L 85 48" fill="none" stroke="white" stroke-width="0.6" opacity="0.3"/><path d="M65 30 Q 65 48 80 48 Q 65 48 65 62 Q 65 48 50 48 Q 65 48 65 30 Z" fill="white" opacity="0.65"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 1;
+            pointer-events: none;
+            filter: drop-shadow(0 0 40px var(--star-glow));
+        }
+
+        /* Мягкое наложение оригинальной картинки сверху, если файл сохранен в папке проекта как bg.png */
+        .background-image::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('bg.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
         }
 
         .container {
+            position: relative;
+            z-index: 2;
             width: 100%;
-            max-width: 800px;
+            max-width: 640px;
             background-color: var(--container-bg);
             border: 1px solid var(--border-color);
-            border-radius: 6px;
+            border-radius: 10px;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
             overflow: hidden;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9);
         }
 
         .header {
-            padding: 16px;
-            background-color: var(--bg-color);
+            padding: 26px 24px;
             border-bottom: 1px solid var(--border-color);
-            font-weight: 6px;
-            font-size: 16px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.3rem;
+            font-weight: 300;
+            letter-spacing: 5px;
+            text-transform: uppercase;
         }
 
         .file-list {
@@ -64,61 +112,125 @@
         .file-link {
             display: flex;
             align-items: center;
-            padding: 14px 16px;
-            color: var(--link-color);
+            justify-content: space-between;
+            padding: 20px 24px;
+            color: var(--text-primary);
             text-decoration: none;
-            font-size: 14px;
+            font-size: 0.95rem;
+            letter-spacing: 1px;
         }
 
-        .file-link:hover {
-            color: var(--link-hover);
-            text-decoration: underline;
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
         }
 
-        .icon {
-            margin-right: 12px;
-            color: #8b949e;
-            flex-shrink: 0;
+        .file-index {
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .file-name {
+            font-weight: 400;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            transition: transform 0.2s ease;
+        }
+
+        .file-item:hover .file-name {
+            transform: translateX(4px);
+        }
+
+        .file-action {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-family: monospace;
+            border: 1px solid var(--border-color);
+            padding: 5px 12px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .file-item:hover .file-action {
+            color: #000000;
+            background-color: #ffffff;
+            border-color: #ffffff;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">📋 Доступные AI-модели и скрипты</div>
-    <ul class="file-list">
-        <li class="file-item">
-            <a class="file-link" href="Qwen.html">
-                <span class="icon">📄</span> Qwen.html
-            </a>
-        </li>
-        <li class="file-item">
-            <a class="file-link" href="coursor.html">
-                <span class="icon">📄</span> coursor.html
-            </a>
-        </li>
-        <li class="file-item">
-            <a class="file-link" href="deepseek.html">
-                <span class="icon">📄</span> deepseek.html
-            </a>
-        </li>
-        <li class="file-item">
-            <a class="file-link" href="gemini.html">
-                <span class="icon">📄</span> gemini.html
-            </a>
-        </li>
-        <li class="file-item">
-            <a class="file-link" href="giga.html">
-                <span class="icon">📄</span> giga.html
-            </a>
-        </li>
-        <li class="file-item">
-            <a class="file-link" href="zoo%20code.html">
-                <span class="icon">📄</span> zoo code.html
-            </a>
-        </li>
-    </ul>
-</div>
+    <!-- Ваша новая хромированная звезда на фоне (вшита аппаратно) -->
+    <div class="background-image"></div>
+
+    <!-- Строгая минималистичная панель -->
+    <div class="container">
+        <div class="header">
+            <h1>AI Navigation Index</h1>
+        </div>
+        
+        <ul class="file-list">
+            <li class="file-item">
+                <a class="file-link" href="Qwen.html">
+                    <div class="file-info">
+                        <span class="file-index">// 01</span>
+                        <span class="file-name">Qwen</span>
+                    </div>
+                    <div class="file-action">Запуск</div>
+                </a>
+            </li>
+            <li class="file-item">
+                <a class="file-link" href="coursor.html">
+                    <div class="file-info">
+                        <span class="file-index">// 02</span>
+                        <span class="file-name">Cursor</span>
+                    </div>
+                    <div class="file-action">Запуск</div>
+                </a>
+            </li>
+            <li class="file-item">
+                <a class="file-link" href="deepseek.html">
+                    <div class="file-info">
+                        <span class="file-index">// 03</span>
+                        <span class="file-name">DeepSeek</span>
+                    </div>
+                    <div class="file-action">Запуск</div>
+                </a>
+            </li>
+            <li class="file-item">
+                <a class="file-link" href="gemini.html">
+                    <div class="file-info">
+                        <span class="file-index">// 04</span>
+                        <span class="file-name">Gemini</span>
+                    </div>
+                    <div class="file-action">Запуск</div>
+                </a>
+            </li>
+            <li class="file-item">
+                <a class="file-link" href="giga.html">
+                    <div class="file-info">
+                        <span class="file-index">// 05</span>
+                        <span class="file-name">GigaChat</span>
+                    </div>
+                    <div class="file-action">Запуск</div>
+                </a>
+            </li>
+            <li class="file-item">
+                <a class="file-link" href="zoo%20code.html">
+                    <div class="file-info">
+                        <span class="file-index">// 06</span>
+                        <span class="file-name">Zoo Code</span>
+                    </div>
+                    <div class="file-action">Запуск</div>
+                </a>
+            </li>
+        </ul>
+    </div>
 
 </body>
 </html>
