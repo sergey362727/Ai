@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Навигация по AI-страницам</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --container-bg: #161b22;
+            --border-color: #30363d;
+            --text-color: #c9d1d9;
+            --link-color: #58a6ff;
+            --link-hover: #1f6feb;
+            --item-hover: #21262d;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--container-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 16px;
+            background-color: var(--bg-color);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 6px;
+            font-size: 16px;
+        }
+
+        .file-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .file-item {
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s ease;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-item:hover {
+            background-color: var(--item-hover);
+        }
+
+        .file-link {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            color: var(--link-color);
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .file-link:hover {
+            color: var(--link-hover);
+            text-decoration: underline;
+        }
+
+        .icon {
+            margin-right: 12px;
+            color: #8b949e;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">📋 Доступные AI-модели и скрипты</div>
+    <ul class="file-list">
+        <li class="file-item">
+            <a class="file-link" href="Qwen.html">
+                <span class="icon">📄</span> Qwen.html
+            </a>
+        </li>
+        <li class="file-item">
+            <a class="file-link" href="coursor.html">
+                <span class="icon">📄</span> coursor.html
+            </a>
+        </li>
+        <li class="file-item">
+            <a class="file-link" href="deepseek.html">
+                <span class="icon">📄</span> deepseek.html
+            </a>
+        </li>
+        <li class="file-item">
+            <a class="file-link" href="gemini.html">
+                <span class="icon">📄</span> gemini.html
+            </a>
+        </li>
+        <li class="file-item">
+            <a class="file-link" href="giga.html">
+                <span class="icon">📄</span> giga.html
+            </a>
+        </li>
+        <li class="file-item">
+            <a class="file-link" href="zoo%20code.html">
+                <span class="icon">📄</span> zoo code.html
+            </a>
+        </li>
+    </ul>
+</div>
+
+</body>
+</html>
